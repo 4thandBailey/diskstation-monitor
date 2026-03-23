@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a" id="theme-meta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="application-name" content="DiskStation Monitor">
+<meta name="description" content="DiskStation Monitor — Administrator Portal Sign In">
+<title>DiskStation Monitor — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+/* ─── THEME TOKENS ─── */
+:root {
+  --bg:           #0a0e1a;
+  --bg2:          #0f1525;
+  --bg3:          #161d30;
+  --bg4:          #1c263a;
+  --border:       rgba(255,255,255,0.07);
+  --border-hi:    rgba(255,255,255,0.14);
+  --text:         #e8eaf0;
+  --text2:        #8b93aa;
+  --text3:        #545d74;
+  --accent:       #00bcd4;
+  --accent-glow:  rgba(0,188,212,0.18);
+  --green:        #00c87a;
+  --green-dim:    rgba(0,200,122,0.12);
+  --red:          #ef4444;
+  --red-dim:      rgba(239,68,68,0.10);
+  --amber:        #f59e0b;
+  --purple:       #8b5cf6;
+  --shadow:       0 4px 24px rgba(0,0,0,.45);
+  --shadow-lg:    0 16px 60px rgba(0,0,0,.65);
+  --font:         'DM Sans', sans-serif;
+  --mono:         'DM Mono', monospace;
+  --display:      'Syne', sans-serif;
+  --nav-bg:       rgba(10,14,26,0.95);
+  --radius:       10px;
+  --radius-lg:    16px;
+}
+
+[data-theme="light"] {
+  --bg:           #f0f3fb;
+  --bg2:          #ffffff;
+  --bg3:          #eaeff8;
+  --bg4:          #dde4f0;
+  --border:       rgba(0,0,0,0.08);
+  --border-hi:    rgba(0,0,0,0.15);
+  --text:         #0f172a;
+  --text2:        #475569;
+  --text3:        #94a3b8;
+  --accent:       #0891b2;
+  --accent-glow:  rgba(8,145,178,0.12);
+  --green:        #059669;
+  --green-dim:    rgba(5,150,105,0.10);
+  --red:          #dc2626;
+  --red-dim:      rgba(220,38,38,0.08);
+  --amber:        #d97706;
+  --shadow:       0 4px 24px rgba(0,0,0,.08);
+  --shadow-lg:    0 16px 60px rgba(0,0,0,.14);
+  --nav-bg:       rgba(255,255,255,0.96);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#f0f3fb; --bg2:#fff; --bg3:#eaeff8; --bg4:#dde4f0;
+    --border:rgba(0,0,0,.08); --border-hi:rgba(0,0,0,.15);
+    --text:#0f172a; --text2:#475569; --text3:#94a3b8;
+    --accent:#0891b2; --accent-glow:rgba(8,145,178,.12);
+    --green:#059669; --red:#dc2626; --amber:#d97706;
+    --shadow:0 4px 24px rgba(0,0,0,.08);
+    --shadow-lg:0 16px 60px rgba(0,0,0,.14);
+    --nav-bg:rgba(255,255,255,.96);
+  }
+}
+
+/* ─── RESET ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  transition: background .3s, color .3s;
+}
+
+/* ─── ANIMATED BACKGROUND ─── */
+.bg-canvas {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(90px); opacity: 0; animation: orbFloat 12s ease-in-out infinite;
+}
+.bg-orb.o1 {
+  width: 600px; height: 600px; background: rgba(0,188,212,.06);
+  top: -120px; left: -100px; animation-delay: 0s;
+}
+.bg-orb.o2 {
+  width: 500px; height: 500px; background: rgba(139,92,246,.05);
+  bottom: -100px; right: -80px; animation-delay: 4s;
+}
+.bg-orb.o3 {
+  width: 350px; height: 350px; background: rgba(0,200,122,.04);
+  top: 50%; left: 55%; animation-delay: 8s;
+}
+@keyframes orbFloat {
+  0%,100% { opacity:1; transform: translate(0,0) scale(1); }
+  33%      { transform: translate(30px,-20px) scale(1.05); }
+  66%      { transform: translate(-20px,30px) scale(.95); }
+}
+
+/* Grid overlay */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* ─── HEADER ─── */
+header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.header-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--display); font-size: 17px; font-weight: 800;
+  color: var(--text); letter-spacing: -.3px; text-decoration: none;
+  cursor: default;
+}
+.header-brand .dsm-pill {
+  font-family: var(--mono); font-size: 10px; font-weight: 500;
+  color: var(--accent); background: var(--accent-glow);
+  border: 1px solid rgba(0,188,212,.25); border-radius: 5px;
+  padding: 2px 6px; letter-spacing: .4px;
+}
+[data-theme="light"] .header-brand .dsm-pill {
+  border-color: rgba(8,145,178,.2);
+}
+.theme-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--bg3); border: 1px solid var(--border-hi);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; transition: all .15s;
+  color: var(--text2);
+}
+.theme-btn:hover { background: var(--bg4); color: var(--text); }
+
+/* ─── MAIN LAYOUT ─── */
+main {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 80px 20px 80px;
+  position: relative; z-index: 10;
+}
+
+/* ─── AUTH CARD ─── */
+.auth-card {
+  width: 100%; max-width: 420px;
+  background: var(--bg2);
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 40px 40px 36px;
+  position: relative;
+  animation: cardReveal .5s cubic-bezier(.16,1,.3,1);
+}
+@keyframes cardReveal {
+  from { opacity:0; transform:translateY(18px) scale(.98); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+
+/* Accent top border */
+.auth-card::before {
+  content:''; position:absolute; top:-1px; left:24px; right:24px; height:2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  border-radius: 2px;
+}
+
+.auth-logo {
+  text-align: center; margin-bottom: 28px;
+}
+.auth-logo-mark {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--display); font-size: 22px; font-weight: 800;
+  color: var(--text); letter-spacing: -.4px;
+}
+.auth-logo-mark .dot { color: var(--accent); }
+.auth-tagline {
+  font-size: 12px; color: var(--text3); margin-top: 5px;
+  font-family: var(--mono); letter-spacing: .3px;
+}
+
+/* Step headings */
+.step-heading {
+  font-family: var(--display); font-size: 20px; font-weight: 700;
+  color: var(--text); margin-bottom: 4px; letter-spacing: -.2px;
+}
+.step-sub {
+  font-size: 13px; color: var(--text2); margin-bottom: 24px; line-height: 1.5;
+}
+.step-sub a {
+  color: var(--accent); text-decoration: none; font-weight: 500;
+}
+.step-sub a:hover { text-decoration: underline; }
+
+/* ─── FORM ELEMENTS ─── */
+.field-group { margin-bottom: 16px; }
+.field-label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--text2);
+  text-transform: uppercase; letter-spacing: .7px; margin-bottom: 7px;
+}
+.field-required { color: var(--accent); margin-left: 2px; }
+.field-input {
+  width: 100%; padding: 11px 14px;
+  background: var(--bg3); border: 1.5px solid var(--border-hi);
+  border-radius: var(--radius); color: var(--text);
+  font-family: var(--font); font-size: 14px;
+  outline: none; transition: border-color .15s, background .15s, box-shadow .15s;
+  -webkit-appearance: none;
+}
+.field-input::placeholder { color: var(--text3); }
+.field-input:focus {
+  border-color: var(--accent);
+  background: var(--bg2);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.field-input.error  { border-color: var(--red);   box-shadow: 0 0 0 3px var(--red-dim); }
+.field-input.success{ border-color: var(--green);  box-shadow: 0 0 0 3px var(--green-dim); }
+
+/* Password wrapper with toggle */
+.pw-wrap { position: relative; }
+.pw-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--text3); font-size: 14px; padding: 4px;
+  transition: color .15s; line-height: 1;
+}
+.pw-toggle:hover { color: var(--text); }
+
+/* Field error message */
+.field-error {
+  font-size: 12px; color: var(--red); margin-top: 5px;
+  display: none; align-items: center; gap: 4px;
+}
+.field-error.show { display: flex; }
+
+/* Field success hint */
+.field-hint {
+  font-size: 11px; color: var(--text3); margin-top: 5px;
+  line-height: 1.4;
+}
+
+/* ─── EMAIL PREVIEW ─── */
+.email-preview {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--bg3);
+  border: 1px solid var(--border-hi); border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+.email-preview-addr {
+  font-size: 14px; color: var(--text); font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.email-preview-change {
+  background: none; border: none; color: var(--accent);
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: var(--font);
+  flex-shrink: 0; margin-left: 12px; transition: opacity .15s;
+}
+.email-preview-change:hover { opacity: .75; }
+
+/* ─── STRENGTH METER ─── */
+.strength-wrap { margin-top: 8px; }
+.strength-bar {
+  display: flex; gap: 4px; height: 4px; margin-bottom: 5px;
+}
+.strength-seg {
+  flex: 1; border-radius: 2px;
+  background: var(--bg4); transition: background .2s;
+}
+.strength-label { font-size: 11px; color: var(--text3); }
+
+/* ─── PRIMARY BUTTON ─── */
+.btn-primary {
+  width: 100%; padding: 12px;
+  background: var(--accent); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .15s;
+  letter-spacing: .2px; position: relative; overflow: hidden;
+}
+.btn-primary:hover { filter: brightness(1.12); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,188,212,.3); }
+.btn-primary:active { transform: translateY(0); filter: brightness(.95); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+[data-theme="light"] .btn-primary { color: #fff; }
+
+/* Ripple on click */
+.btn-primary::after {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(circle, rgba(255,255,255,.25) 0%, transparent 70%);
+  opacity:0; transition: opacity .3s;
+}
+.btn-primary:active::after { opacity:1; }
+
+/* ─── DIVIDER ─── */
+.or-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 20px 0; color: var(--text3); font-size: 12px;
+}
+.or-divider::before, .or-divider::after {
+  content:''; flex:1; height:1px; background:var(--border-hi);
+}
+
+/* ─── OAUTH BUTTONS ─── */
+.oauth-row { display: flex; gap: 10px; margin-bottom: 6px; }
+.btn-oauth {
+  flex: 1; padding: 10px; border-radius: var(--radius);
+  background: var(--bg3); border: 1px solid var(--border-hi);
+  color: var(--text2); font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.btn-oauth:hover { background: var(--bg4); color: var(--text); border-color: var(--border-hi); }
+.oauth-icon { font-size: 15px; }
+
+/* ─── STEPS ─── */
+.step { display: none; animation: stepIn .25s ease; }
+.step.active { display: block; }
+@keyframes stepIn {
+  from { opacity:0; transform: translateX(12px); }
+  to   { opacity:1; transform: translateX(0); }
+}
+
+/* ─── PROGRESS DOTS ─── */
+.progress-dots {
+  display: flex; justify-content: center; gap: 6px; margin-bottom: 28px;
+}
+.prog-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bg4); transition: all .25s;
+}
+.prog-dot.active { background: var(--accent); width: 20px; border-radius: 3px; }
+.prog-dot.done   { background: var(--green); }
+
+/* ─── SUCCESS STATE ─── */
+.success-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--green-dim); border: 2px solid rgba(0,200,122,.25);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 24px;
+  animation: successPop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes successPop {
+  from { transform: scale(0); opacity:0; }
+  to   { transform: scale(1); opacity:1; }
+}
+
+/* ─── TERMS ─── */
+.terms-note {
+  font-size: 11px; color: var(--text3); margin-top: 14px;
+  text-align: center; line-height: 1.5;
+}
+.terms-note a { color: var(--text2); text-decoration: underline; }
+.terms-note a:hover { color: var(--text); }
+
+/* ─── BACK LINK ─── */
+.back-link {
+  background: none; border: none; color: var(--text3);
+  font-size: 12px; cursor: pointer; font-family: var(--font);
+  display: flex; align-items: center; gap: 4px;
+  transition: color .12s; padding: 0; margin-bottom: 20px;
+}
+.back-link:hover { color: var(--text2); }
+
+/* ─── FOOTER ─── */
+footer {
+  position: relative; z-index: 10;
+  padding: 16px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--border);
+  font-size: 11px; color: var(--text3); flex-wrap: wrap; gap: 8px;
+}
+.footer-copy { display: flex; align-items: center; gap: 6px; }
+.footer-copy a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.footer-copy a:hover { opacity: .75; }
+.footer-links { display: flex; align-items: center; gap: 16px; }
+.footer-links a {
+  color: var(--text3); text-decoration: underline;
+  transition: color .12s;
+}
+.footer-links a:hover { color: var(--text2); }
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg3); }
+::-webkit-scrollbar-thumb { background: #3a4a6b; border-radius: 999px; border: 2px solid var(--bg3); }
+::-webkit-scrollbar-thumb:hover { background: #546189; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 480px) {
+  .auth-card { padding: 28px 22px 24px; max-width: 100%; }
+  header { padding: 0 16px; }
+  footer { padding: 12px 16px; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .oauth-row { flex-direction: column; }
+  .footer-links { gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Animated background -->
+<div class="bg-canvas">
+  <div class="bg-orb o1"></div>
+  <div class="bg-orb o2"></div>
+  <div class="bg-orb o3"></div>
+</div>
+<div class="bg-grid"></div>
+
+<!-- Header -->
+<header>
+  <div class="header-brand">
+    DiskStation<span style="color:var(--accent)"> </span>Monitor
+    <span class="dsm-pill">DSM</span>
+  </div>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+</header>
+
+<!-- Main content -->
+<main>
+  <div class="auth-card">
+
+    <!-- Logo mark -->
+    <div class="auth-logo">
+      <div class="auth-logo-mark">
+        DiskStation<span class="dot"> </span>Monitor
+      </div>
+      <div class="auth-tagline">Administrator Portal</div>
+    </div>
+
+    <!-- Progress dots (3-step signup) -->
+    <div class="progress-dots" id="progress-dots">
+      <div class="prog-dot active" id="dot-1"></div>
+      <div class="prog-dot" id="dot-2"></div>
+      <div class="prog-dot" id="dot-3"></div>
+    </div>
+
+    <!-- ── STEP 1: Email ── -->
+    <div class="step active" id="step-email">
+      <div class="step-heading">Sign in or sign up</div>
+      <div class="step-sub">Enter your administrator email address to continue.</div>
+
+      <div class="field-group">
+        <label class="field-label" for="email-input">
+          Email address<span class="field-required">*</span>
+        </label>
+        <input
+          class="field-input" id="email-input" type="email"
+          placeholder="admin@yourcompany.com"
+          autocomplete="email" spellcheck="false"
+          oninput="onEmailInput(this.value)"
+          onkeydown="if(event.key==='Enter') submitEmail()">
+        <div class="field-error" id="email-error">
+          <span>⚠</span><span id="email-error-msg">Please enter a valid email address.</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="email-next-btn" onclick="submitEmail()">
+        Continue →
+      </button>
+
+      <div class="or-divider">or</div>
+
+      <div class="oauth-row">
+        <button class="btn-oauth" onclick="oauthSignIn('Microsoft')">
+          <span class="oauth-icon">🟦</span> Microsoft
+        </button>
+        <button class="btn-oauth" onclick="oauthSignIn('Google')">
+          <span class="oauth-icon">🔴</span> Google
+        </button>
+        <button class="btn-oauth" onclick="oauthSignIn('GitHub')">
+          <span class="oauth-icon">⬛</span> GitHub
+        </button>
+      </div>
+
+      <p class="terms-note">
+        By continuing, you agree to the
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </p>
+    </div>
+
+    <!-- ── STEP 2a: Returning user — Password ── -->
+    <div class="step" id="step-signin">
+      <button class="back-link" onclick="goBack('step-email', [1])">← Back</button>
+
+      <div class="step-heading">Welcome back</div>
+      <div class="step-sub">Signing in as <span id="signin-email-display" style="color:var(--text);font-weight:600"></span></div>
+
+      <div class="email-preview">
+        <span class="email-preview-addr" id="signin-email-preview"></span>
+        <button class="email-preview-change" onclick="goBack('step-email', [1])">Change</button>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="signin-password">
+          Password<span class="field-required">*</span>
+        </label>
+        <div class="pw-wrap">
+          <input class="field-input" id="signin-password" type="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            onkeydown="if(event.key==='Enter') submitSignIn()"
+            oninput="clearFieldError('signin-password','pw-error')">
+          <button class="pw-toggle" onclick="togglePw('signin-password',this)" tabindex="-1">👁</button>
+        </div>
+        <div class="field-error" id="pw-error">
+          <span>⚠</span><span>Incorrect password. Please try again.</span>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:-8px;margin-bottom:18px">
+        <button style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)" onclick="showStep('step-forgot')">
+          Forgot password?
+        </button>
+      </div>
+
+      <button class="btn-primary" onclick="submitSignIn()">Sign In</button>
+
+      <p class="terms-note" style="margin-top:18px">
+        New administrator?
+        <a href="#" onclick="showStep('step-signup');setDots([1,1,0]);return false">Create an account →</a>
+      </p>
+    </div>
+
+    <!-- ── STEP 2b: New user — Create Account ── -->
+    <div class="step" id="step-signup">
+      <button class="back-link" onclick="goBack('step-email', [1])">← Back</button>
+
+      <div class="step-heading">Create your account</div>
+      <div class="step-sub">
+        Registering as <span id="signup-email-display" style="color:var(--text);font-weight:600"></span>
+      </div>
+
+      <div class="email-preview">
+        <span class="email-preview-addr" id="signup-email-preview"></span>
+        <button class="email-preview-change" onclick="goBack('step-email', [1])">Change</button>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="signup-name">
+          Full name<span class="field-required">*</span>
+        </label>
+        <input class="field-input" id="signup-name" type="text"
+          placeholder="e.g. Jane Smith"
+          autocomplete="name"
+          oninput="clearFieldError('signup-name','name-error')">
+        <div class="field-error" id="name-error">
+          <span>⚠</span><span>Please enter your full name.</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="signup-password">
+          Password<span class="field-required">*</span>
+        </label>
+        <div class="pw-wrap">
+          <input class="field-input" id="signup-password" type="password"
+            placeholder="Create a strong password"
+            autocomplete="new-password"
+            oninput="onPasswordInput(this.value)"
+            onkeydown="if(event.key==='Enter') submitSignUp()">
+          <button class="pw-toggle" onclick="togglePw('signup-password',this)" tabindex="-1">👁</button>
+        </div>
+        <div class="strength-wrap" id="strength-wrap" style="display:none">
+          <div class="strength-bar">
+            <div class="strength-seg" id="seg1"></div>
+            <div class="strength-seg" id="seg2"></div>
+            <div class="strength-seg" id="seg3"></div>
+            <div class="strength-seg" id="seg4"></div>
+          </div>
+          <div class="strength-label" id="strength-label">Password strength</div>
+        </div>
+        <div class="field-hint">Minimum 8 characters. Use letters, numbers, and symbols.</div>
+        <div class="field-error" id="sp-error">
+          <span>⚠</span><span id="sp-error-msg">Password must be at least 8 characters.</span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="signup-confirm">
+          Confirm password<span class="field-required">*</span>
+        </label>
+        <div class="pw-wrap">
+          <input class="field-input" id="signup-confirm" type="password"
+            placeholder="Re-enter your password"
+            autocomplete="new-password"
+            oninput="onConfirmInput(this.value)"
+            onkeydown="if(event.key==='Enter') submitSignUp()">
+          <button class="pw-toggle" onclick="togglePw('signup-confirm',this)" tabindex="-1">👁</button>
+        </div>
+        <div class="field-error" id="confirm-error">
+          <span>⚠</span><span>Passwords do not match.</span>
+        </div>
+      </div>
+
+      <!-- GDPR consent — A.18.1 lawful basis documentation -->
+      <div class="field-group" style="margin-bottom:12px">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input type="checkbox" id="gdpr-consent" onchange="onConsentChange()"
+            style="margin-top:3px;width:15px;height:15px;flex-shrink:0;accent-color:var(--accent)">
+          <span style="font-size:12px;color:var(--text2);line-height:1.5">
+            I agree that DiskStation Monitor may process my data (email address, device names,
+            IP addresses, and monitoring logs) for the purpose of NAS fleet monitoring.
+            I understand I can request erasure at any time via
+            <strong style="color:var(--text)">Settings → Data Rights</strong>.
+            See our <a href="#" style="color:var(--accent)">Privacy Policy</a>.
+          </span>
+        </label>
+        <div class="field-error" id="consent-error" style="margin-top:6px">
+          <span>⚠</span><span>You must accept the data processing terms to create an account.</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="create-account-btn" onclick="submitSignUp()" style="opacity:.5;cursor:not-allowed" disabled>Create Account →</button>
+
+      <p class="terms-note">
+        Already have an account?
+        <a href="#" onclick="showSignInStep();return false">Sign in →</a>
+      </p>
+    </div>
+
+    <!-- ── STEP 3: Forgot Password ── -->
+    <div class="step" id="step-forgot">
+      <button class="back-link" onclick="goBack('step-signin', [1,1,0])">← Back</button>
+      <div class="step-heading">Reset password</div>
+      <div class="step-sub">We'll send a reset link to your email address.</div>
+
+      <div class="field-group">
+        <label class="field-label">Email address</label>
+        <div class="email-preview">
+          <span class="email-preview-addr" id="forgot-email-preview"></span>
+          <button class="email-preview-change" onclick="goBack('step-email', [1])">Change</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="submitForgot()">Send Reset Link →</button>
+    </div>
+
+    <!-- ── STEP 4: Success ── -->
+    <div class="step" id="step-success">
+      <div class="success-icon">✓</div>
+      <div style="text-align:center">
+        <div class="step-heading" style="text-align:center" id="success-title">Signed in</div>
+        <div class="step-sub" style="text-align:center;margin-bottom:24px" id="success-msg">
+          Redirecting to your fleet dashboard…
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goToDashboard()">Open Dashboard →</button>
+    </div>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-copy">
+    © 2026 <a href="https://4thandbailey.com" target="_blank" rel="noopener noreferrer">4TH AND BAILEY</a>. All rights reserved.
+  </div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms of Service</a>
+    <a href="#">Do Not Sell My Personal Information</a>
+  </div>
+</footer>
+
+<script>
+// ─── THEME ────────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('theme-btn');
+  const meta = document.getElementById('theme-meta');
+  btn.textContent = t === 'dark' ? '☀️' : '🌙';
+  if (meta) meta.content = t === 'dark' ? '#0a0e1a' : '#f0f3fb';
+  try { localStorage.setItem('dsm-theme', t); } catch(e){}
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+(function initTheme() {
+  let saved;
+  try { saved = localStorage.getItem('dsm-theme'); } catch(e){}
+  const preferLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  applyTheme(saved || (preferLight ? 'light' : 'dark'));
+})();
+
+// ─── STATE ────────────────────────────────────────────────
+let currentEmail = '';
+// Simulated existing accounts for demo
+const EXISTING_ACCOUNTS = [
+  'admin@yourcompany.com',
+  'admin@4thandbailey.com',
+  'sysadmin@example.com',
+];
+
+// ─── DOTS ─────────────────────────────────────────────────
+function setDots(states) {
+  // states: array of 0=inactive, 1=active, 2=done  — maps to dots 1,2,3
+  const map = ['dot-1','dot-2','dot-3'];
+  map.forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'prog-dot';
+    if (states[i] === 2) el.classList.add('done');
+    else if (states[i] === 1) el.classList.add('active');
+  });
+  // Hide dots on success/forgot screens
+  const dotsEl = document.getElementById('progress-dots');
+  if (dotsEl) dotsEl.style.display = states.every(s=>s===0) ? 'none' : 'flex';
+}
+
+// ─── STEP MANAGEMENT ──────────────────────────────────────
+function showStep(id) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function goBack(targetStep, dotStates) {
+  showStep(targetStep);
+  setDots(dotStates);
+}
+
+// ─── STEP 1: EMAIL ────────────────────────────────────────
+function onEmailInput(val) {
+  clearFieldError('email-input', 'email-error');
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+
+function submitEmail() {
+  const input = document.getElementById('email-input');
+  const val = input.value.trim();
+
+  if (!validateEmail(val)) {
+    showFieldError('email-input', 'email-error', 'Please enter a valid email address.');
+    input.focus(); return;
+  }
+
+  currentEmail = val;
+  const isExisting = EXISTING_ACCOUNTS.some(a => a.toLowerCase() === val.toLowerCase());
+
+  if (isExisting) {
+    showSignInStep();
+  } else {
+    showSignUpStep();
+  }
+}
+
+function showSignInStep() {
+  document.getElementById('signin-email-display').textContent = currentEmail;
+  document.getElementById('signin-email-preview').textContent = currentEmail;
+  document.getElementById('forgot-email-preview').textContent = currentEmail;
+  document.getElementById('signin-password').value = '';
+  clearFieldError('signin-password', 'pw-error');
+  showStep('step-signin');
+  setDots([2, 1, 0]);
+  setTimeout(() => document.getElementById('signin-password').focus(), 100);
+}
+
+function showSignUpStep() {
+  document.getElementById('signup-email-display').textContent = currentEmail;
+  document.getElementById('signup-email-preview').textContent = currentEmail;
+  document.getElementById('signup-name').value = '';
+  document.getElementById('signup-password').value = '';
+  document.getElementById('signup-confirm').value = '';
+  document.getElementById('strength-wrap').style.display = 'none';
+  // Reset GDPR consent
+  const consent = document.getElementById('gdpr-consent');
+  if (consent) consent.checked = false;
+  const btn = document.getElementById('create-account-btn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '.5'; btn.style.cursor = 'not-allowed'; }
+  document.getElementById('consent-error')?.classList.remove('show');
+  showStep('step-signup');
+  setDots([2, 1, 0]);
+  setTimeout(() => document.getElementById('signup-name').focus(), 100);
+}
+
+// ─── STEP 2a: SIGN IN ─────────────────────────────────────
+function submitSignIn() {
+  const pw = document.getElementById('signin-password').value;
+  if (!pw) {
+    showFieldError('signin-password', 'pw-error', 'Please enter your password.');
+    return;
+  }
+  // Simulate auth — accept 'password123' or any 8+ char password for demo
+  if (pw.length < 6) {
+    showFieldError('signin-password', 'pw-error', 'Incorrect password. Please try again.');
+    return;
+  }
+  triggerSuccess('Signed in successfully', `Welcome back. Redirecting to your fleet dashboard…`);
+}
+
+// ─── STEP 2b: SIGN UP ─────────────────────────────────────
+function onPasswordInput(val) {
+  const wrap = document.getElementById('strength-wrap');
+  clearFieldError('signup-password', 'sp-error');
+  if (!val) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const strength = calcStrength(val);
+  const segs = ['seg1','seg2','seg3','seg4'];
+  const colors = ['var(--red)','var(--amber)','var(--amber)','var(--green)'];
+  const labels = ['Too weak','Fair','Good','Strong'];
+  segs.forEach((id,i) => {
+    document.getElementById(id).style.background = i < strength ? colors[strength-1] : 'var(--bg4)';
+  });
+  const lbl = document.getElementById('strength-label');
+  lbl.textContent = labels[strength-1] || 'Too weak';
+  lbl.style.color = colors[strength-1] || 'var(--red)';
+}
+
+function calcStrength(pw) {
+  let score = 0;
+  if (pw.length >= 8)  score++;
+  if (pw.length >= 12) score++;
+  if (/[^a-zA-Z0-9]/.test(pw)) score++;
+  if (/[0-9]/.test(pw) && /[a-zA-Z]/.test(pw)) score++;
+  return Math.max(1, Math.min(4, score));
+}
+
+function onConfirmInput(val) {
+  const pw = document.getElementById('signup-password').value;
+  const el = document.getElementById('signup-confirm');
+  if (val && val !== pw) {
+    el.classList.add('error'); el.classList.remove('success');
+    document.getElementById('confirm-error').classList.add('show');
+  } else if (val && val === pw) {
+    el.classList.remove('error'); el.classList.add('success');
+    document.getElementById('confirm-error').classList.remove('show');
+  } else {
+    el.classList.remove('error','success');
+    document.getElementById('confirm-error').classList.remove('show');
+  }
+}
+
+function onConsentChange() {
+  const checked = document.getElementById('gdpr-consent')?.checked;
+  const btn = document.getElementById('create-account-btn');
+  if (btn) {
+    btn.disabled = !checked;
+    btn.style.opacity = checked ? '1' : '.5';
+    btn.style.cursor  = checked ? 'pointer' : 'not-allowed';
+  }
+  if (checked) {
+    document.getElementById('consent-error')?.classList.remove('show');
+  }
+}
+
+function submitSignUp() {
+  const name    = document.getElementById('signup-name').value.trim();
+  const pw      = document.getElementById('signup-password').value;
+  const conf    = document.getElementById('signup-confirm').value;
+  const consent = document.getElementById('gdpr-consent')?.checked;
+  let valid = true;
+
+  if (!name) {
+    showFieldError('signup-name', 'name-error', 'Please enter your full name.');
+    valid = false;
+  }
+  if (pw.length < 8) {
+    showFieldError('signup-password', 'sp-error', 'Password must be at least 8 characters.');
+    valid = false;
+  }
+  if (pw !== conf) {
+    showFieldError('signup-confirm', 'confirm-error', 'Passwords do not match.');
+    valid = false;
+  }
+  if (!consent) {
+    document.getElementById('consent-error')?.classList.add('show');
+    valid = false;
+  }
+  if (!valid) return;
+
+  // Record consent timestamp — stored in PostgreSQL as users.gdpr_consent_at in production
+  const consentRecord = {
+    email:     currentEmail,
+    consentAt: new Date().toISOString(),
+    ipHint:    '(recorded server-side in production)',
+    basis:     'Explicit consent — data processing for NAS fleet monitoring',
+    version:   '1.0'
+  };
+  try {
+    sessionStorage.setItem('dsm-consent-record', JSON.stringify(consentRecord));
+  } catch(e) {}
+
+  EXISTING_ACCOUNTS.push(currentEmail.toLowerCase());
+
+  triggerSuccess(
+    'Account created',
+    `Welcome, ${name.split(' ')[0]}. Your administrator account is ready.`
+  );
+}
+
+// ─── FORGOT PASSWORD ──────────────────────────────────────
+function submitForgot() {
+  showStep('step-success');
+  setDots([0,0,0]);
+  document.getElementById('success-title').textContent = 'Reset link sent';
+  document.getElementById('success-msg').textContent =
+    `A password reset link has been sent to ${currentEmail}. Check your inbox.`;
+  document.getElementById('progress-dots').style.display = 'none';
+}
+
+// ─── OAUTH ────────────────────────────────────────────────
+function oauthSignIn(provider) {
+  triggerSuccess(`Signed in via ${provider}`, `Redirecting to your fleet dashboard…`);
+}
+
+// ─── SUCCESS ──────────────────────────────────────────────
+function triggerSuccess(title, msg) {
+  document.getElementById('success-title').textContent = title;
+  document.getElementById('success-msg').textContent = msg;
+  showStep('step-success');
+  setDots([2, 2, 2]);
+  // Simulate redirect after short delay
+  setTimeout(goToDashboard, 2800);
+}
+
+function goToDashboard() {
+  const btn = document.querySelector('#step-success .btn-primary');
+  if (btn) { btn.textContent = 'Redirecting…'; btn.disabled = true; }
+
+  // ── Session state handoff to synology-monitor.html ──
+  // Production: Railway backend sets HttpOnly refresh token cookie on /auth/login.
+  // Access token stored in sessionStorage (tab-scoped, cleared on tab close).
+  // Theme syncs via localStorage — read identically by both files on load.
+  // Logout: dashboard POSTs /auth/logout → Railway deletes Redis entry + clears cookie.
+  try {
+    // Simulate JWT payload — production version comes from /auth/login response JSON
+    const payload = { sub: currentEmail, role: 'admin',
+                      iat: Math.floor(Date.now()/1000),
+                      exp: Math.floor(Date.now()/1000) + 900 };
+    const simToken = 'eyJhbGciOiJIUzI1NiJ9.' +
+      btoa(JSON.stringify(payload)).replace(/=/g,'') + '.SIM_ONLY';
+    sessionStorage.setItem('dsm-access-token', simToken);
+    sessionStorage.setItem('dsm-current-user', currentEmail);
+    // Theme already in localStorage via applyTheme() — no extra action needed
+  } catch(e) {
+    // sessionStorage blocked (Firefox private mode restriction) — degrade gracefully
+    console.warn('Session storage unavailable; unauthenticated dashboard load.');
+  }
+
+  setTimeout(() => { window.location.href = 'synology-monitor.html'; }, 700);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function showFieldError(inputId, errorId, msg) {
+  const inp = document.getElementById(inputId);
+  const err = document.getElementById(errorId);
+  if (inp) { inp.classList.add('error'); inp.classList.remove('success'); }
+  if (err) {
+    const msgEl = err.querySelector('span:last-child');
+    if (msgEl && msg) msgEl.textContent = msg;
+    err.classList.add('show');
+  }
+}
+
+function clearFieldError(inputId, errorId) {
+  const inp = document.getElementById(inputId);
+  const err = document.getElementById(errorId);
+  if (inp) { inp.classList.remove('error'); }
+  if (err) err.classList.remove('show');
+}
+
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+// Auto-focus email on load
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const el = document.getElementById('email-input');
+    if (el) el.focus();
+  }, 300);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiskStation Monitor</title>
+  <link rel="icon" href="/favicon.ico" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --surface2: #22263a;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #e8eaf0;
+      --muted:    #8b8fa8;
+      --accent:   #3d7cfa;
+      --green:    #34c17a;
+      --amber:    #f5a623;
+      --red:      #e05252;
+      --font:     -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --sidebar-w: 220px;
+      --header-h:  56px;
+    }
+    [data-theme="light"] {
+      --bg: #f0f2f8; --surface: #ffffff; --surface2: #f5f7ff;
+      --border: rgba(0,0,0,0.08); --text: #1a1d27; --muted: #6b6f85;
+    }
+
+    body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background 0.2s, color 0.2s; }
+
+    /* ── Header ── */
+    header {
+      height: var(--header-h); flex-shrink: 0;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 20px; gap: 12px; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; white-space: nowrap; }
+    .logo-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+    .summary-strip { display: flex; gap: 6px; margin-left: 16px; flex: 1; overflow: hidden; }
+    .stat-pill { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 12px; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+    .stat-pill .val { font-weight: 600; }
+    .stat-pill.alert-pill .val { color: var(--amber); }
+    .stat-pill.offline-pill .val { color: var(--red); }
+    .stat-pill.online-pill .val { color: var(--green); }
+
+    .header-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .theme-btn { background: transparent; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; cursor: pointer; color: var(--text); font-size: 14px; }
+
+    .avatar-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent); border: none; cursor: pointer;
+      color: #fff; font-size: 13px; font-weight: 700;
+      position: relative;
+    }
+    .user-dropdown {
+      position: absolute; top: calc(var(--header-h) - 4px); right: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 6px; min-width: 200px; z-index: 1000;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      display: none;
+    }
+    .user-dropdown.open { display: block; }
+    .user-email { padding: 8px 10px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .dd-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .dd-item:hover { background: var(--surface2); }
+    .dd-item.danger { color: var(--red); }
+
+    /* ── Layout ── */
+    .body-wrap { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    aside {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 12px 8px; overflow-y: auto;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; font-weight: 500; color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: var(--surface2); color: var(--text); }
+    .nav-item.active { background: rgba(61,124,250,0.15); color: var(--accent); }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge { margin-left: auto; background: var(--red); color: #fff; border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; }
+
+    .sidebar-section { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 10px 12px 4px; margin-top: 8px; }
+
+    /* ── Main content ── */
+    main { flex: 1; overflow-y: auto; padding: 24px; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .page-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* ── Fleet table ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+    tbody td { padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .status-dot.online  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.offline { background: var(--red); }
+    .status-dot.unknown { background: var(--muted); }
+
+    .poll-timeline { display: flex; gap: 2px; }
+    .poll-tick { width: 6px; height: 20px; border-radius: 2px; }
+    .poll-tick.ok      { background: var(--green); }
+    .poll-tick.slow    { background: var(--amber); }
+    .poll-tick.error   { background: var(--red); }
+    .poll-tick.unknown { background: var(--border); }
+
+    .tag { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-size: 11px; }
+
+    /* ── Cards row ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; display: flex; flex-direction: column; gap: 4px;
+    }
+    .card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .card-value { font-size: 28px; font-weight: 700; }
+    .card-sub   { font-size: 12px; color: var(--muted); }
+    .card.green .card-value { color: var(--green); }
+    .card.amber .card-value { color: var(--amber); }
+    .card.red   .card-value { color: var(--red); }
+
+    /* ── Map ── */
+    #fleetMap { height: 360px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 24px; }
+
+    /* ── Alerts ── */
+    .alert-item {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;
+    }
+    .alert-severity { font-size: 18px; flex-shrink: 0; }
+    .alert-title  { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .alert-meta   { font-size: 12px; color: var(--muted); }
+    .alert-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-sm { padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text); }
+    .btn-sm:hover { background: var(--surface2); }
+
+    /* ── Poll log ── */
+    .poll-log { font-size: 12px; font-family: monospace; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px; height: 280px; overflow-y: auto; }
+    .poll-log-entry { padding: 3px 0; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
+    .poll-log-entry:last-child { border-bottom: none; }
+    .log-time   { color: var(--muted); flex-shrink: 0; }
+    .log-device { color: var(--accent); }
+    .log-status.ok    { color: var(--green); }
+    .log-status.error { color: var(--red); }
+    .log-latency { color: var(--muted); margin-left: auto; }
+
+    /* ── Add device modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+    .modal h3 { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--bg); color: var(--text);
+      font-size: 13px; font-family: var(--font); outline: none;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--accent); }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+    .btn-cancel { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+    .btn-save   { background: var(--accent); border: none; color: #fff; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      aside { display: none; }
+      .summary-strip { display: none; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+<!-- Header -->
+<header>
+  <div class="logo"><div class="logo-icon">🖥</div> DiskStation Monitor</div>
+  <div class="summary-strip" id="summaryStrip">
+    <div class="stat-pill online-pill"><span class="val" id="statTotal">—</span> <span>devices</span></div>
+    <div class="stat-pill online-pill"><span class="val" id="statOnline">—</span> <span>online</span></div>
+    <div class="stat-pill offline-pill"><span class="val" id="statOffline">—</span> <span>offline</span></div>
+    <div class="stat-pill alert-pill"><span class="val" id="statAlerts">—</span> <span>alerts</span></div>
+  </div>
+  <div class="header-right">
+    <button class="theme-btn" id="themeBtn">🌙</button>
+    <button class="avatar-btn" id="avatarBtn">A</button>
+    <div class="user-dropdown" id="userDropdown">
+      <div class="user-email" id="userEmail">—</div>
+      <div class="dd-item" onclick="showPage('settingsPage')">⚙️ Settings</div>
+      <div class="dd-item" onclick="showPage('securityPage')">🔐 Security</div>
+      <div class="dd-item danger" onclick="handleLogout()">⬡ Sign out</div>
+    </div>
+  </div>
+</header>
+
+<div class="body-wrap">
+  <!-- Sidebar -->
+  <aside>
+    <div class="nav-item active" onclick="showPage('fleetPage')" id="nav-fleet">
+      <span class="nav-icon">🗄</span> Fleet
+    </div>
+    <div class="nav-item" onclick="showPage('pollPage')" id="nav-poll">
+      <span class="nav-icon">📡</span> Poll Engine
+    </div>
+    <div class="nav-item" onclick="showPage('alertsPage')" id="nav-alerts">
+      <span class="nav-icon">🔔</span> Alerts
+      <span class="nav-badge" id="alertBadge" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('integrityPage')" id="nav-integrity">
+      <span class="nav-icon">🔍</span> Integrity
+    </div>
+    <div class="nav-item" onclick="showPage('mapPage')" id="nav-map">
+      <span class="nav-icon">🗺</span> Map
+    </div>
+    <div class="sidebar-section">Account</div>
+    <div class="nav-item" onclick="showPage('settingsPage')" id="nav-settings">
+      <span class="nav-icon">⚙️</span> Settings
+    </div>
+    <div class="nav-item" onclick="showPage('securityPage')" id="nav-security">
+      <span class="nav-icon">🔐</span> Security
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main>
+
+    <!-- ── Fleet Page ── -->
+    <div class="page active" id="fleetPage">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px">
+        <div>
+          <h1>Fleet</h1>
+          <div class="page-sub">All registered Synology appliances</div>
+        </div>
+        <button class="btn-save" onclick="openAddDevice()">+ Add Device</button>
+      </div>
+
+      <div class="cards" id="fleetCards">
+        <div class="card green"><div class="card-label">Online</div><div class="card-value" id="c-online">—</div></div>
+        <div class="card amber"><div class="card-label">Alerts</div><div class="card-value" id="c-alerts">—</div></div>
+        <div class="card red"><div class="card-label">Offline</div><div class="card-value" id="c-offline">—</div></div>
+        <div class="card"><div class="card-label">Total</div><div class="card-value" id="c-total">—</div></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Name</th>
+              <th>Model</th>
+              <th>IP Address</th>
+              <th>DSM</th>
+              <th>Poll History</th>
+              <th>Connections</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="deviceTableBody">
+            <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Loading devices…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Poll Engine Page ── -->
+    <div class="page" id="pollPage">
+      <h1>Poll Engine</h1>
+      <div class="page-sub">Real-time LAN-resident polling status</div>
+      <div class="cards">
+        <div class="card green"><div class="card-label">Healthy</div><div class="card-value" id="pe-healthy">—</div></div>
+        <div class="card"><div class="card-label">Avg Latency</div><div class="card-value" id="pe-latency">—</div><div class="card-sub">ms</div></div>
+        <div class="card green"><div class="card-label">Success Rate</div><div class="card-value" id="pe-rate">—</div><div class="card-sub">last 100 polls</div></div>
+        <div class="card"><div class="card-label">Last Cycle</div><div class="card-value" style="font-size:16px" id="pe-last">—</div></div>
+      </div>
+      <h3 style="margin-bottom:12px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Live Poll Log</h3>
+      <div class="poll-log" id="pollLog">
+        <div class="poll-log-entry"><span class="log-time">Waiting for polls…</span></div>
+      </div>
+    </div>
+
+    <!-- ── Alerts Page ── -->
+    <div class="page" id="alertsPage">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px">
+        <div><h1>Alerts</h1><div class="page-sub">Active fleet alerts requiring attention</div></div>
+        <button class="btn-sm" onclick="dismissAllAlerts()">Dismiss all</button>
+      </div>
+      <div id="alertsList">
+        <div style="color:var(--muted);text-align:center;padding:40px">Loading alerts…</div>
+      </div>
+    </div>
+
+    <!-- ── Integrity Page ── -->
+    <div class="page" id="integrityPage">
+      <h1>File Integrity</h1>
+      <div class="page-sub">MD5 scan results, DirSize growth, virtual folders, and background tasks</div>
+      <div id="integrityContent" style="color:var(--muted);padding:20px 0">Select a device from the Fleet page to view integrity data.</div>
+    </div>
+
+    <!-- ── Map Page ── -->
+    <div class="page" id="mapPage">
+      <h1>Fleet Map</h1>
+      <div class="page-sub">Geographic distribution of all managed appliances</div>
+      <div id="fleetMap"></div>
+    </div>
+
+    <!-- ── Settings Page ── -->
+    <div class="page" id="settingsPage">
+      <h1>Settings</h1>
+      <div class="page-sub">SMTP alerts and account preferences</div>
+      <div class="table-wrap" style="padding:24px; max-width:560px">
+        <h3 style="margin-bottom:16px;font-size:15px">SMTP Alert Configuration</h3>
+        <div class="form-group"><label>SMTP Host</label><input type="text" id="smtpHost" placeholder="smtp.office365.com" /></div>
+        <div class="form-row">
+          <div class="form-group"><label>Port</label><input type="number" id="smtpPort" value="587" /></div>
+          <div class="form-group"><label>Username</label><input type="text" id="smtpUser" placeholder="alerts@company.com" /></div>
+        </div>
+        <div class="form-group"><label>Password</label><input type="password" id="smtpPass" placeholder="App password" /></div>
+        <div class="form-group"><label>From Name</label><input type="text" id="smtpFromName" placeholder="DiskStation Monitor" /></div>
+        <button class="btn-save" onclick="saveSmtp()">Save SMTP Config</button>
+        <div id="smtpMsg" style="margin-top:12px;font-size:13px;color:var(--green);display:none">Saved successfully.</div>
+      </div>
+
+      <div class="table-wrap" style="padding:24px; max-width:560px; margin-top:20px">
+        <h3 style="margin-bottom:16px;font-size:15px">Data Rights (GDPR)</h3>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn-save" onclick="downloadData()">📥 Download my data</button>
+          <button class="btn-sm" style="color:var(--red);border-color:var(--red)" onclick="deleteAccount()">🗑 Delete account</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Security Page ── -->
+    <div class="page" id="securityPage">
+      <h1>Security</h1>
+      <div class="page-sub">Token management, access log, and compliance posture</div>
+      <div class="table-wrap" style="padding:0; margin-bottom:20px">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600">API Token Registry</div>
+        <table>
+          <thead><tr><th>Device</th><th>Serial</th><th>Label</th><th>Created</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="tokenTableBody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap" style="padding:0">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600">Access Log</div>
+        <table>
+          <thead><tr><th>Event</th><th>IP Address</th><th>Status</th><th>Timestamp</th></tr></thead>
+          <tbody id="accessLogBody"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Device Modal -->
+<div class="modal-overlay" id="addDeviceModal">
+  <div class="modal">
+    <h3>Register Device</h3>
+    <div class="form-group"><label>Serial Number</label><input type="text" id="devSerial" placeholder="1830PDN001234" /></div>
+    <div class="form-group"><label>Display Name</label><input type="text" id="devName" placeholder="NAS-PRIMARY" /></div>
+    <div class="form-row">
+      <div class="form-group"><label>IP Address</label><input type="text" id="devIp" placeholder="192.168.1.10" /></div>
+      <div class="form-group"><label>Port</label><input type="number" id="devPort" value="5001" /></div>
+    </div>
+    <div class="form-group">
+      <label>Protocol</label>
+      <select id="devProtocol"><option value="https">HTTPS (recommended)</option><option value="http">HTTP</option></select>
+    </div>
+    <div class="form-group"><label>Scoped API Token</label><input type="password" id="devToken" placeholder="Paste token from DSM → Security → API Portal" /></div>
+    <div class="form-group"><label>MD5 Sentinel Scope (one path per line)</label><textarea id="devScope" placeholder="/volume1/data/contracts&#10;/volume1/config"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Location Name</label><input type="text" id="devLocation" placeholder="Server Room A" /></div>
+    </div>
+    <div id="addDeviceMsg" style="font-size:13px;color:var(--red);display:none"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAddDevice()">Cancel</button>
+      <button class="btn-save" id="addDeviceBtn" onclick="submitAddDevice()">Register Device</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

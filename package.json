@@ -1,0 +1,20 @@
+﻿{
+  "name": "diskstation-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Real-time fleet monitoring for Synology NAS appliances",
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "build": "npm run build --workspace=backend",
+    "start": "node backend/dist/index.js",
+    "db:migrate": "npm run db:migrate --workspace=backend",
+    "db:seed": "npm run db:seed --workspace=backend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
