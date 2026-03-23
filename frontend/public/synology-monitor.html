@@ -2807,16 +2807,14 @@ const SERIAL_DB = {
   'Q1R': { model:'RS3621xs+',type:'rack',cpu:'Intel Xeon D-1531 (6-core)', ram:'16 GB (48 GB max)', bays:'36', net:'2× 10GbE + 4× 1GbE' },
   // ── FlashStation / UC ──
   'I5J': { model:'FS3600',  type:'flash', cpu:'Intel Xeon D-1567 (12-core)', ram:'16 GB (256 GB max)', bays:'24', net:'4× 25GbE' },
-  '253': { model:'DS923+',    type:'nas', cpu:'AMD Ryzen R1600 (4-core)', ram:'4 GB (32 GB max)', bays:'4', net:'2x 1GbE' },
+  '253': { model:'DS224+',    type:'nas', cpu:'AMD Ryzen R1600 dual-core', ram:'2 GB (6 GB max)', bays:'2', net:'2x 1GbE' },
+  '251': { model:'DS223+',    type:'nas', cpu:'Realtek RTD1619B (4-core)', ram:'2 GB (6 GB max)', bays:'2', net:'2x 1GbE' },
+  '213': { model:'DS418',     type:'nas', cpu:'Realtek RTD1293 (4-core)', ram:'2 GB', bays:'4', net:'1x 1GbE' },
   '25A': { model:'DS1522+',   type:'nas', cpu:'AMD Ryzen R1600 (4-core)', ram:'8 GB (32 GB max)', bays:'5', net:'4x 1GbE' },
   '25B': { model:'DS1621+',   type:'nas', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'6', net:'4x 1GbE' },
   '25C': { model:'DS1821+',   type:'nas', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'8', net:'4x 1GbE' },
-  '25D': { model:'DS223+',    type:'nas', cpu:'Realtek RTD1619B (4-core)', ram:'2 GB', bays:'2', net:'2x 1GbE' },
-  '25E': { model:'DS423+',    type:'nas', cpu:'Intel Celeron J4125 (4-core)', ram:'2 GB', bays:'4', net:'2x 1GbE' },
+  '25D': { model:'DS423+',    type:'nas', cpu:'Intel Celeron J4125 (4-core)', ram:'2 GB', bays:'4', net:'2x 1GbE' },
   '25F': { model:'DS723+',    type:'nas', cpu:'AMD Ryzen R1600 (2-core)', ram:'2 GB (32 GB max)', bays:'2', net:'2x 1GbE' },
-  '25G': { model:'DS1823xs+', type:'nas', cpu:'Intel Xeon D-1733NT (6-core)', ram:'8 GB (64 GB max)', bays:'8', net:'4x 1GbE + 2x 10GbE' },
-  '25H': { model:'RS2423+',   type:'rack', cpu:'AMD Ryzen V1500B (4-core)', ram:'8 GB (32 GB max)', bays:'24', net:'4x 1GbE' },
-  '25J': { model:'RS1221RP+', type:'rack', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'12', net:'4x 1GbE' },
   '1C5': { model:'DS918+',    type:'nas', cpu:'Intel Celeron J3455 (4-core)', ram:'4 GB (8 GB max)', bays:'4', net:'2x 1GbE' },
   'D6E': { model:'UC3200',  type:'cluster', cpu:'Intel Xeon D-1521 (4-core)', ram:'8 GB (32 GB max)', bays:'12', net:'4× 10GbE' },
 };
@@ -2840,6 +2838,18 @@ function lookupBySerial(serial) {
 
 // ─── DATA ───────────────────────────────────────────────
 let DEVICES = [];
+
+let nextId = 9;
+
+const ALERTS = [
+  { id:1, type:'crit', title:'RACK-02 — Power Loss Detected', desc:'RS2421+ (10.1.10.30) has been unreachable for 47 minutes. Last seen 09:01:18. Power loss suspected.', time:'09:01 AM', icon:'⚡' },
+  { id:2, type:'warn', title:'RACK-01 — IP Address Changed', desc:'RS820RP+ IP changed from 10.1.10.19 → 10.1.10.20 at 09:37:12. DHCP lease renewal detected.', time:'09:37 AM', icon:'🌐' },
+  { id:3, type:'info', title:'3 Devices — DSM 7.2.1 Update Available', desc:'NAS-PRIMARY, NAS-MEDIA, NAS-DEV, and RACK-01 have a pending DSM update to 7.2.1-69057.', time:'08:00 AM', icon:'↓' }
+];
+
+let currentFilter = 'all';
+let currentSearch = '';
+let alertList = [...ALERTS];
 
 // ─── RENDER ───────────────────────────────────────────────
 function healthClass(d) {
@@ -3365,7 +3375,6 @@ function lookupSerial() {
 
   let result = lookupBySerial(serial);
   if (!result) {
-    // Accept unknown serials with a generic profile
     result = { model:'Synology NAS', type:'nas', cpu:'--', ram:'--', bays:'--', net:'--', serial:serial, autoName:'NAS-NEW' };
   }
 
