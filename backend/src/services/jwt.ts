@@ -7,17 +7,18 @@ const ACCESS_EXPIRES  = process.env.JWT_ACCESS_EXPIRES  || '15m';
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES || '7d';
 
 export interface JwtPayload {
-  sub: string;       // userId
-  jti: string;       // unique token ID (used for Redis invalidation)
+  sub: string;
+  jti: string;
   email: string;
   role: string;
   iat?: number;
   exp?: number;
 }
 
-export function signAccessToken(payload: Omit<JwtPayload, 'jti'>): string {
+// Accept full payload including jti so callers can supply it after refresh rotation
+export function signAccessToken(payload: JwtPayload): string {
   return jwt.sign(
-    { ...payload, jti: uuidv4() },
+    { ...payload, jti: payload.jti || uuidv4() },
     ACCESS_SECRET,
     { expiresIn: ACCESS_EXPIRES } as jwt.SignOptions
   );
