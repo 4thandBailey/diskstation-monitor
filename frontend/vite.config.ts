@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
 
 export default defineConfig({
   root: '.',
@@ -7,9 +6,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      input: {
-        dashboard: resolve(__dirname, 'synology-monitor.html'),
-      },
+      input: {},
     },
     sourcemap: false,
     minify: 'esbuild',
