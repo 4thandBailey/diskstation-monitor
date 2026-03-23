@@ -1,0 +1,32 @@
+# DiskStation Monitor — Final fix: clean netlify.toml + prestart migrations
+# Run: Set-ExecutionPolicy Bypass -Scope Process -Force; .\FINAL.ps1
+
+$RepoPath = "C:\Users\LionelMosley\Documents\HTML\Synology - DiskStation Monitor"
+Set-Location $RepoPath
+Write-Host "Applying final fixes..." -ForegroundColor Cyan
+
+# netlify.toml
+$b64 = "W2J1aWxkXQogIGJhc2UgICAgPSAiZnJvbnRlbmQiCiAgY29tbWFuZCA9ICJucG0gcnVuIGJ1aWxkIgogIHB1Ymxpc2ggPSAiZGlzdCIKCltidWlsZC5lbnZpcm9ubWVudF0KICBOT0RFX1ZFUlNJT04gPSAiMjAiCiAgVklURV9BUElfVVJMID0gImh0dHBzOi8vZGlza3N0YXRpb24tbW9uaXRvci1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwIgoKW1tyZWRpcmVjdHNdXQogIGZyb20gICA9ICIvKiIKICB0byAgICAgPSAiL2luZGV4Lmh0bWwiCiAgc3RhdHVzID0gMjAwCgpbW2hlYWRlcnNdXQogIGZvciA9ICIvYXNzZXRzLyoiCiAgW2hlYWRlcnMudmFsdWVzXQogICAgQ2FjaGUtQ29udHJvbCA9ICJwdWJsaWMsIG1heC1hZ2U9MzE1MzYwMDAsIGltbXV0YWJsZSIKCltbaGVhZGVyc11dCiAgZm9yID0gIi8qIgogIFtoZWFkZXJzLnZhbHVlc10KICAgIFgtRnJhbWUtT3B0aW9ucyAgICAgICAgID0gIkRFTlkiCiAgICBYLUNvbnRlbnQtVHlwZS1PcHRpb25zICA9ICJub3NuaWZmIgogICAgUmVmZXJyZXItUG9saWN5ICAgICAgICAgPSAic3RyaWN0LW9yaWdpbi13aGVuLWNyb3NzLW9yaWdpbiIKICAgIFBlcm1pc3Npb25zLVBvbGljeSAgICAgID0gImNhbWVyYT0oKSwgbWljcm9waG9uZT0oKSwgZ2VvbG9jYXRpb249KCkiCiAgICBDb250ZW50LVNlY3VyaXR5LVBvbGljeSA9ICJkZWZhdWx0LXNyYyAnc2VsZic7IHNjcmlwdC1zcmMgJ3NlbGYnIGh0dHBzOi8vdW5wa2cuY29tOyBzdHlsZS1zcmMgJ3NlbGYnICd1bnNhZmUtaW5saW5lJyBodHRwczovL2ZvbnRzLmdvb2dsZWFwaXMuY29tOyBmb250LXNyYyBodHRwczovL2ZvbnRzLmdzdGF0aWMuY29tOyBpbWctc3JjICdzZWxmJyBkYXRhOiBodHRwczovLyoudGlsZS5vcGVuc3RyZWV0bWFwLm9yZzsgY29ubmVjdC1zcmMgJ3NlbGYnIGh0dHBzOi8vZGlza3N0YXRpb24tbW9uaXRvci1wcm9kdWN0aW9uLnVwLnJhaWx3YXkuYXBwIGh0dHBzOi8vbm9taW5hdGltLm9wZW5zdHJlZXRtYXAub3JnIgo="
+$bytes = [System.Convert]::FromBase64String($b64)
+$fullPath = Join-Path $RepoPath "netlify.toml"
+[System.IO.File]::WriteAllBytes($fullPath, $bytes)
+Write-Host "  wrote netlify.toml" -ForegroundColor Green
+
+# package.json
+$b64 = "ewogICJuYW1lIjogImRpc2tzdGF0aW9uLW1vbml0b3IiLAogICJ2ZXJzaW9uIjogIjEuMC4wIiwKICAicHJpdmF0ZSI6IHRydWUsCiAgImRlc2NyaXB0aW9uIjogIlJlYWwtdGltZSBmbGVldCBtb25pdG9yaW5nIGZvciBTeW5vbG9neSBOQVMgYXBwbGlhbmNlcyIsCiAgIndvcmtzcGFjZXMiOiBbImZyb250ZW5kIiwgImJhY2tlbmQiXSwKICAic2NyaXB0cyI6IHsKICAgICJkZXYiOiAiY29uY3VycmVudGx5IFwibnBtIHJ1biBkZXYgLS13b3Jrc3BhY2U9YmFja2VuZFwiIFwibnBtIHJ1biBkZXYgLS13b3Jrc3BhY2U9ZnJvbnRlbmRcIiIsCiAgICAiYnVpbGQiOiAibnBtIHJ1biBidWlsZCAtLXdvcmtzcGFjZT1iYWNrZW5kIiwKICAgICJwcmVzdGFydCI6ICJub2RlIGJhY2tlbmQvZGlzdC9kYi9taWdyYXRlLmpzIiwKICAgICJzdGFydCI6ICJub2RlIGJhY2tlbmQvZGlzdC9pbmRleC5qcyIsCiAgICAiZGI6bWlncmF0ZSI6ICJucG0gcnVuIGRiOm1pZ3JhdGUgLS13b3Jrc3BhY2U9YmFja2VuZCIsCiAgICAiZGI6c2VlZCI6ICJucG0gcnVuIGRiOnNlZWQgLS13b3Jrc3BhY2U9YmFja2VuZCIKICB9LAogICJkZXZEZXBlbmRlbmNpZXMiOiB7CiAgICAiY29uY3VycmVudGx5IjogIl44LjIuMiIKICB9LAogICJlbmdpbmVzIjogewogICAgIm5vZGUiOiAiPj0yMC4wLjAiCiAgfQp9Cg=="
+$bytes = [System.Convert]::FromBase64String($b64)
+$fullPath = Join-Path $RepoPath "package.json"
+[System.IO.File]::WriteAllBytes($fullPath, $bytes)
+Write-Host "  wrote package.json" -ForegroundColor Green
+
+git add netlify.toml package.json
+git commit -m "fix: clean netlify.toml encoding + prestart DB migrations"
+git push origin main
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "`n✅ Pushed! Watch both deploys:" -ForegroundColor Green
+    Write-Host "   Netlify: https://app.netlify.com/projects/diskstation-monitor/deploys" -ForegroundColor Cyan
+    Write-Host "   Railway: https://railway.app" -ForegroundColor Cyan
+} else {
+    Write-Host "`n❌ Push failed." -ForegroundColor Red
+}
