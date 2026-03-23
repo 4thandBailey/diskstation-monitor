@@ -59,12 +59,13 @@ devicesRouter.post('/', async (req: Request, res: Response) => {
 
     if (!device) throw new Error('Insert failed');
 
-    // Store hashed token
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    // Encrypt user:pass credential with AES-256-GCM
+    const { encryptCredential } = await import('../workers/pollEngine');
+    const encrypted = encryptCredential(token); // token = "username:password" from frontend
     await db.query(
       `INSERT INTO device_tokens (device_id, user_id, token_hash, label, scope)
-       VALUES ($1, $2, $3, 'Initial token', $4)`,
-      [device.id, req.user.sub, tokenHash, FILESTATION_SCOPE]
+       VALUES ($1, $2, $3, 'DSM credentials', $4)`,
+      [device.id, req.user.sub, encrypted, FILESTATION_SCOPE]
     );
 
     return res.status(201).json({ message: 'Device registered', deviceId: device.id });

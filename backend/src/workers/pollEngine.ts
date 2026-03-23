@@ -1,8 +1,6 @@
 /**
- * Poll Engine Worker
- * Runs as a background process in Railway.
- * One staggered polling loop per registered device per user.
- * Authenticates via scoped API token — no admin credentials stored.
+ * Poll Engine — DSM 7.2 username/password authentication
+ * Credentials stored AES-256-GCM encrypted, never in plaintext.
  */
 
 import crypto from 'crypto';
@@ -18,7 +16,33 @@ const AUTH_TIMEOUT      = Number(process.env.POLL_AUTH_TIMEOUT_MS || 10000);
 const MD5_CRON          = process.env.POLL_MD5_SCHEDULE_CRON    || '0 6 * * *';
 const DIRSIZE_CRON      = process.env.POLL_DIRSIZE_SCHEDULE_CRON || '0 */6 * * *';
 
+const ENC_KEY = process.env.CREDENTIAL_ENCRYPTION_KEY || '';
+
 const activeTimers = new Map<string, NodeJS.Timeout>();
+
+// ── AES-256-GCM encrypt ───────────────────────────────────────────────────────
+export function encryptCredential(plaintext: string): string {
+  const key = Buffer.from(ENC_KEY, 'hex');
+  const iv  = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const enc  = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const tag  = cipher.getAuthTag();
+  return iv.toString('hex') + ':' + tag.toString('hex') + ':' + enc.toString('hex');
+}
+
+// ── AES-256-GCM decrypt ───────────────────────────────────────────────────────
+export function decryptCredential(stored: string): string {
+  // Support legacy SHA-256 hashed tokens (will fail auth but won't crash)
+  if (!stored.includes(':')) return stored;
+  const [ivHex, tagHex, encHex] = stored.split(':');
+  const key = Buffer.from(ENC_KEY, 'hex');
+  const iv  = Buffer.from(ivHex, 'hex');
+  const tag = Buffer.from(tagHex, 'hex');
+  const enc = Buffer.from(encHex, 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+  decipher.setAuthTag(tag);
+  return decipher.update(enc) + decipher.final('utf8');
+}
 
 export async function startPollEngine(): Promise<void> {
   console.log('[poll-engine] Starting...');
@@ -61,7 +85,6 @@ function schedulePollLoop(deviceId: string, intervalMs: number): void {
   run();
 }
 
-// ── Device type with correct field names matching DB column ──────────────────
 interface DeviceRow {
   id: string;
   user_id: string;
@@ -90,11 +113,35 @@ async function pollDevice(deviceId: string): Promise<void> {
     [deviceId]
   );
   if (!tokenRow) {
-    console.warn(`[poll] Device ${deviceId} has no active token — skipping`);
+    console.warn(`[poll] Device ${deviceId} has no credentials — skipping`);
     return;
   }
 
-  const baseUrl = `${device.protocol}://${device.ip_address}:${device.port}`;
+  // Decrypt stored credential — format is "username:password"
+  let username = 'dsm-monitor';
+  let password = '';
+  try {
+    const decrypted = decryptCredential(tokenRow.token_hash);
+    if (decrypted.includes(':')) {
+      const colonIdx = decrypted.indexOf(':');
+      username = decrypted.substring(0, colonIdx);
+      password = decrypted.substring(colonIdx + 1);
+    } else {
+      // Legacy token hash — cannot use, mark as needing re-registration
+      console.warn(`[poll] Device ${deviceId} has legacy token — needs re-registration`);
+      return;
+    }
+  } catch (err) {
+    console.error(`[poll] Failed to decrypt credentials for ${deviceId}:`, err);
+    return;
+  }
+
+  // Build base URL — support QuickConnect URLs
+  const isQuickConnect = device.ip_address.toLowerCase().includes('quickconnect');
+  const baseUrl = isQuickConnect
+    ? device.ip_address.replace(/\/$/, '')
+    : `${device.protocol}://${device.ip_address}:${device.port}`;
+
   const start = Date.now();
 
   const http = axios.create({
@@ -104,19 +151,18 @@ async function pollDevice(deviceId: string): Promise<void> {
   });
 
   try {
-    const sid = await synoAuth(http, tokenRow.token_hash);
+    const sid = await synoAuth(http, username, password);
     const latencyMs = Date.now() - start;
 
     const info       = await synoCall(http, sid, 'SYNO.FileStation.Info', 'get', 1, {});
     const volumeList = await synoCall(http, sid, 'SYNO.FileStation.List', 'list_share', 2, { additional: 'volume_status' });
-    const checkPermOk = await synoCheckPermission(http, sid, deviceId);
     const bgTasks    = await synoCall(http, sid, 'SYNO.FileStation.BackgroundTask', 'list', 1, {});
     const vFolders   = await synoCall(http, sid, 'SYNO.FileStation.VirtualFolder', 'list', 2, { type: 'cifs', additional: 'real_path,owner,time,perm,mount_point_type,volume_status' });
     const connections = await synoCall(http, sid, 'SYNO.Core.CurrentConnection', 'list', 1, {});
 
-    const dsmVersion    = (info?.data as Record<string, unknown>)?.DSMVersion as string ?? device.dsm_version ?? null;
-    const observedIp    = device.ip_address;
-    const ipChanged     = device.prev_ip != null && device.prev_ip !== observedIp;
+    const dsmVersion     = (info?.data as Record<string, unknown>)?.DSMVersion as string ?? device.dsm_version ?? null;
+    const observedIp     = device.ip_address;
+    const ipChanged      = device.prev_ip != null && device.prev_ip !== observedIp;
     const versionChanged = dsmVersion != null && device.dsm_version != null && dsmVersion !== device.dsm_version;
 
     await db.query(
@@ -151,17 +197,13 @@ async function pollDevice(deviceId: string): Promise<void> {
       await raiseAlert(device.user_id, deviceId, 'info', 'dsm_version_change',
         'DSM version changed', `Device ${device.serial} updated to DSM ${dsmVersion}`);
     }
-    if (!checkPermOk) {
-      await raiseAlert(device.user_id, deviceId, 'warning', 'check_permission_denied',
-        'File permission check failed',
-        `CheckPermission pre-flight denied on ${device.serial} — token may need rotation`);
-    }
 
     await synoLogout(http, sid);
 
   } catch (err) {
     const latencyMs = Date.now() - start;
     const errorMsg  = err instanceof Error ? err.message : String(err);
+    console.error(`[poll] Device ${device.serial} poll error:`, errorMsg);
 
     await db.query(
       `INSERT INTO poll_results (device_id, outcome, latency_ms, error_message) VALUES ($1, 'error', $2, $3)`,
@@ -200,12 +242,23 @@ async function runDirSizeCycle(): Promise<void> {
       );
       if (!tokenRow) continue;
 
+      const decrypted = decryptCredential(tokenRow.token_hash);
+      if (!decrypted.includes(':')) continue;
+      const colonIdx = decrypted.indexOf(':');
+      const username = decrypted.substring(0, colonIdx);
+      const password = decrypted.substring(colonIdx + 1);
+
+      const isQuickConnect = device.ip_address.toLowerCase().includes('quickconnect');
+      const baseUrl = isQuickConnect
+        ? device.ip_address.replace(/\/$/, '')
+        : `${device.protocol}://${device.ip_address}:${device.port}`;
+
       const http = axios.create({
-        baseURL: `${device.protocol}://${device.ip_address}:${device.port}`,
+        baseURL: baseUrl,
         timeout: AUTH_TIMEOUT,
         httpsAgent: new https.Agent({ rejectUnauthorized: false }),
       });
-      const sid = await synoAuth(http, tokenRow.token_hash);
+      const sid = await synoAuth(http, username, password);
 
       for (const path of device.scan_scope) {
         try {
@@ -217,10 +270,7 @@ async function runDirSizeCycle(): Promise<void> {
               await sleep(5000);
               const status = await synoCall(http, sid, 'SYNO.FileStation.DirSize', 'status', 1, { taskid: taskId });
               const data = status?.data as Record<string, unknown> | undefined;
-              if (data?.finished) {
-                sizeBytes = Number(data.num_size ?? 0);
-                break;
-              }
+              if (data?.finished) { sizeBytes = Number(data.num_size ?? 0); break; }
             }
             const sizeGb = sizeBytes / (1024 ** 3);
             await db.query(
@@ -237,7 +287,6 @@ async function runDirSizeCycle(): Promise<void> {
   }
 }
 
-// ── MD5 integrity cycle ───────────────────────────────────────────────────────
 async function runMd5IntegrityCycle(): Promise<void> {
   console.log('[poll-engine] Running MD5 integrity cycle...');
   const devices = await dbQuery<{ id: string }>(
@@ -246,14 +295,12 @@ async function runMd5IntegrityCycle(): Promise<void> {
   console.log(`[poll-engine] MD5 cycle: ${devices.length} devices queued`);
 }
 
-// ── Retention cleanup ─────────────────────────────────────────────────────────
 async function runRetentionCleanup(): Promise<void> {
   await db.query(`DELETE FROM poll_results WHERE polled_at < now() - interval '90 days'`);
   await db.query(`DELETE FROM access_log  WHERE created_at < now() - interval '1 year'`);
   console.log('[poll-engine] Retention cleanup complete');
 }
 
-// ── Alert helper ──────────────────────────────────────────────────────────────
 async function raiseAlert(userId: string, deviceId: string, severity: 'critical' | 'warning' | 'info', type: string, title: string, message: string): Promise<void> {
   const onCooldown = await checkAlertCooldown(deviceId, type);
   if (onCooldown) return;
@@ -265,9 +312,17 @@ async function raiseAlert(userId: string, deviceId: string, severity: 'critical'
 }
 
 // ── Synology API helpers ──────────────────────────────────────────────────────
-async function synoAuth(http: AxiosInstance, tokenHash: string): Promise<string> {
+async function synoAuth(http: AxiosInstance, username: string, password: string): Promise<string> {
   const res = await http.get('/webapi/auth.cgi', {
-    params: { api: 'SYNO.API.Auth', version: 3, method: 'login', account: '_api_token_', passwd: tokenHash, session: 'FileStation', format: 'sid' },
+    params: {
+      api: 'SYNO.API.Auth',
+      version: 3,
+      method: 'login',
+      account: username,
+      passwd: password,
+      session: 'FileStation',
+      format: 'sid'
+    },
     timeout: AUTH_TIMEOUT,
   });
   if (!res.data?.success || !res.data?.data?.sid) {
@@ -285,13 +340,6 @@ async function synoCall(http: AxiosInstance, sid: string, api: string, method: s
   }
 }
 
-async function synoCheckPermission(http: AxiosInstance, sid: string, deviceId: string): Promise<boolean> {
-  const device = await dbQueryOne<{ scan_scope: string[] }>('SELECT scan_scope FROM devices WHERE id = $1', [deviceId]);
-  if (!device?.scan_scope?.length) return true;
-  const res = await synoCall(http, sid, 'SYNO.FileStation.CheckPermission', 'write', 2, { path: device.scan_scope[0] });
-  return res?.success === true;
-}
-
 async function synoLogout(http: AxiosInstance, sid: string): Promise<void> {
   try {
     await http.get('/webapi/auth.cgi', { params: { api: 'SYNO.API.Auth', version: 1, method: 'logout', session: 'FileStation', _sid: sid } });
@@ -301,6 +349,3 @@ async function synoLogout(http: AxiosInstance, sid: string): Promise<void> {
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-// Suppress unused import warning
-void crypto;

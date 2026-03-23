@@ -2617,17 +2617,25 @@ dsm-poller start \
 
       <!-- Scoped API Token — replaces admin credential storage -->
       <div class="form-group" id="token-group" style="display:none">
-        <label class="form-label">
-          Scoped API Token
-          <span style="color:var(--text3);font-weight:400;text-transform:none"> — DSM Control Panel → Security → API Portal</span>
-        </label>
+        <label class="form-label">DSM Username <span style="font-size:11px;color:var(--text3);font-weight:400;text-transform:none">(the dsm-monitor user you created)</span></label>
+        <input class="form-input" id="dsm-username" type="text" value="dsm-monitor"
+          placeholder="dsm-monitor"
+          style="font-family:var(--mono);letter-spacing:.02em">
+        <div style="margin-top:10px"></div>
+        <label class="form-label">DSM Password</label>
         <div style="position:relative">
-          <input class="form-input" id="token-input" type="password"
-            placeholder="Paste token from DSM API Portal…"
-            style="text-transform:none;font-family:var(--mono);font-size:12px;padding-right:40px">
-          <button onclick="togglePwField('token-input',this)"
-            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px">👁</button>
+          <input class="form-input" id="dsm-password" type="password"
+            placeholder="Password for dsm-monitor account"
+            style="padding-right:40px">
+          <span onclick="var i=document.getElementById('dsm-password');i.type=i.type==='password'?'text':'password'" 
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:13px">&#128065;</span>
         </div>
+        <div style="margin-top:8px;padding:8px 10px;background:var(--blue-dim);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.5">
+          DSM 7.2 uses username + password authentication. The <code style="font-family:var(--mono)">dsm-monitor</code> user you created
+          in DSM Control Panel &rarr; User &amp; Group replaces the old API Portal token.
+          Credentials are encrypted with AES-256-GCM before storage.
+        </div>
+      </div>
         <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5">
           In DSM: Control Panel → Security → API Portal → Add → select <strong>File Station</strong> endpoints only.
           Token replaces administrator credentials — never stored in plaintext.
@@ -2813,8 +2821,6 @@ const SERIAL_DB = {
   '25A': { model:'DS1522+',   type:'nas', cpu:'AMD Ryzen R1600 (4-core)', ram:'8 GB (32 GB max)', bays:'5', net:'4x 1GbE' },
   '25B': { model:'DS1621+',   type:'nas', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'6', net:'4x 1GbE' },
   '25C': { model:'DS1821+',   type:'nas', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'8', net:'4x 1GbE' },
-  '25D': { model:'DS423+',    type:'nas', cpu:'Intel Celeron J4125 (4-core)', ram:'2 GB', bays:'4', net:'2x 1GbE' },
-  '25F': { model:'DS723+',    type:'nas', cpu:'AMD Ryzen R1600 (2-core)', ram:'2 GB (32 GB max)', bays:'2', net:'2x 1GbE' },
   '1C5': { model:'DS918+',    type:'nas', cpu:'Intel Celeron J3455 (4-core)', ram:'4 GB (8 GB max)', bays:'4', net:'2x 1GbE' },
   'D6E': { model:'UC3200',  type:'cluster', cpu:'Intel Xeon D-1521 (4-core)', ram:'8 GB (32 GB max)', bays:'12', net:'4× 10GbE' },
 };
@@ -3408,7 +3414,9 @@ function addDevice() {
   const port       = document.getElementById('port-input') ? document.getElementById('port-input').value : '5001';
   const connType   = (ip.includes('quickconnect.to') || ip.includes('myds.me') || ip.startsWith('http'))
                      ? 'quickconnect' : 'lan';
-  const apiToken   = document.getElementById('token-input') ? document.getElementById('token-input').value.trim() : '';
+  const dsmUser = document.getElementById('dsm-username') ? document.getElementById('dsm-username').value.trim() : 'dsm-monitor';
+  const dsmPass = document.getElementById('dsm-password') ? document.getElementById('dsm-password').value : '';
+  const token   = dsmUser + ':' + dsmPass;
   const scopeRaw   = document.getElementById('scope-input') ? document.getElementById('scope-input').value.trim() : '';
   const scanScope  = scopeRaw.split('\n').map(l => l.trim()).filter(Boolean);
   const loc        = document.getElementById('loc-input').value.trim() || 'Unknown';
@@ -5379,7 +5387,7 @@ function loadRealDevices() {
         health:d.status==='online'?94:0, dsm:d.dsm_version||'--',
         lat:d.latitude, lng:d.longitude, location:d.location_name||'',
         cpu:Math.round(p.cpu_percent||0), ram:Math.round(p.ram_percent||0),
-        apiTokenSet:true, apiTokenDisplay:'Scoped token active', apiTokenScope:[],
+        apiTokenSet:true, apiTokenDisplay:'DSM user active', apiTokenScope:[],
         uptime:'--', connections:{smb:0,nfs:0,ftp:0,sftp:0,total:p.connections?p.connections.total||0:0},
         volumes:[] };
     });
