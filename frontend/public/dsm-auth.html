@@ -45,10 +45,7 @@
     <div class="logo-icon">&#128421;</div>
     <div><div class="logo-text">DiskStation Monitor</div><div class="logo-sub">Fleet Management Portal</div></div>
   </div>
-
   <div id="msg" class="alert"></div>
-
-  <!-- LOGIN -->
   <div id="v-login" class="view active">
     <h2>Welcome back</h2>
     <p class="sub">Sign in to your administrator account</p>
@@ -61,8 +58,6 @@
     <button class="btn primary" id="li-btn">Sign in</button>
     <div class="links">No account? <a id="to-reg">Create one</a> &middot; <a id="to-rst">Forgot password?</a></div>
   </div>
-
-  <!-- REGISTER -->
   <div id="v-reg" class="view">
     <h2>Create account</h2>
     <p class="sub">Start monitoring your Synology fleet</p>
@@ -73,8 +68,6 @@
     <button class="btn primary" id="reg-btn">Create account</button>
     <div class="links">Already have an account? <a id="to-login">Sign in</a></div>
   </div>
-
-  <!-- RESET -->
   <div id="v-rst" class="view">
     <h2>Reset password</h2>
     <p class="sub">Enter your email to receive a reset link</p>
@@ -83,104 +76,52 @@
     <div class="links"><a id="to-login2">&larr; Back to sign in</a></div>
   </div>
 </div>
-
 <script>
-var API = 'https://diskstation-monitor-production.up.railway.app';
-
-// Redirect if already logged in
-if (sessionStorage.getItem('dsm-access-token')) {
-  window.location.href = '/synology-monitor.html';
+var API='https://diskstation-monitor-production.up.railway.app';
+if(sessionStorage.getItem('dsm-access-token')){window.location.href='/synology-monitor.html';}
+function show(id){document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});document.getElementById(id).classList.add('active');clr();}
+function msg(t,type){var e=document.getElementById('msg');e.textContent=t;e.className='alert show '+(type==='ok'?'ok':'err');}
+function clr(){var e=document.getElementById('msg');e.className='alert';e.textContent='';}
+document.getElementById('to-reg').onclick=function(){show('v-reg');};
+document.getElementById('to-rst').onclick=function(){show('v-rst');};
+document.getElementById('to-login').onclick=function(){show('v-login');};
+document.getElementById('to-login2').onclick=function(){show('v-login');};
+document.getElementById('ms-btn').onclick=function(){window.location.href=API+'/auth/oauth/microsoft';};
+document.getElementById('gg-btn').onclick=function(){window.location.href=API+'/auth/oauth/google';};
+document.getElementById('gh-btn').onclick=function(){window.location.href=API+'/auth/oauth/github';};
+document.getElementById('li-btn').onclick=doLogin;
+document.getElementById('li-pass').onkeydown=function(e){if(e.key==='Enter')doLogin();};
+function doLogin(){
+  var email=document.getElementById('li-email').value.trim();
+  var pass=document.getElementById('li-pass').value;
+  var btn=document.getElementById('li-btn');
+  if(!email||!pass){msg('Please enter your email and password.');return;}
+  btn.disabled=true;btn.textContent='Signing in...';clr();
+  fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email:email,password:pass})})
+  .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+  .then(function(res){if(!res.ok)throw new Error(res.d.error||'Login failed');sessionStorage.setItem('dsm-access-token',res.d.accessToken);sessionStorage.setItem('dsm-current-user',res.d.user.email);window.location.href='/synology-monitor.html';})
+  .catch(function(e){msg(e.message);btn.disabled=false;btn.textContent='Sign in';});
 }
-
-function show(id) {
-  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
-  clrMsg();
+document.getElementById('reg-btn').onclick=doRegister;
+function doRegister(){
+  var email=document.getElementById('reg-email').value.trim();
+  var name=document.getElementById('reg-name').value.trim();
+  var pass=document.getElementById('reg-pass').value;
+  var gdpr=document.getElementById('gdpr').checked;
+  var btn=document.getElementById('reg-btn');
+  if(!email||!pass){msg('Email and password are required.');return;}
+  if(!gdpr){msg('You must accept the Privacy Policy.');return;}
+  if(pass.length<8){msg('Password must be at least 8 characters.');return;}
+  btn.disabled=true;btn.textContent='Creating account...';clr();
+  fetch(API+'/auth/signup',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email:email,password:pass,displayName:name,gdprConsent:true})})
+  .then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});})
+  .then(function(res){if(!res.ok)throw new Error(res.d.error||'Registration failed');sessionStorage.setItem('dsm-access-token',res.d.accessToken);sessionStorage.setItem('dsm-current-user',res.d.user.email);window.location.href='/synology-monitor.html';})
+  .catch(function(e){msg(e.message);btn.disabled=false;btn.textContent='Create account';});
 }
-
-function msg(text, type) {
-  var el = document.getElementById('msg');
-  el.textContent = text;
-  el.className = 'alert show ' + (type === 'ok' ? 'ok' : 'err');
-}
-
-function clrMsg() {
-  var el = document.getElementById('msg');
-  el.className = 'alert';
-  el.textContent = '';
-}
-
-// Nav
-document.getElementById('to-reg').onclick = function(){ show('v-reg'); };
-document.getElementById('to-rst').onclick = function(){ show('v-rst'); };
-document.getElementById('to-login').onclick = function(){ show('v-login'); };
-document.getElementById('to-login2').onclick = function(){ show('v-login'); };
-
-// SSO
-document.getElementById('ms-btn').onclick = function(){ window.location.href = API + '/auth/oauth/microsoft'; };
-document.getElementById('gg-btn').onclick = function(){ window.location.href = API + '/auth/oauth/google'; };
-document.getElementById('gh-btn').onclick = function(){ window.location.href = API + '/auth/oauth/github'; };
-
-// Login
-document.getElementById('li-btn').onclick = doLogin;
-document.getElementById('li-pass').onkeydown = function(e){ if(e.key==='Enter') doLogin(); };
-
-function doLogin() {
-  var email = document.getElementById('li-email').value.trim();
-  var pass  = document.getElementById('li-pass').value;
-  var btn   = document.getElementById('li-btn');
-  if (!email || !pass) { msg('Please enter your email and password.'); return; }
-  btn.disabled = true; btn.textContent = 'Signing in...'; clrMsg();
-  fetch(API + '/auth/login', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    credentials: 'include',
-    body: JSON.stringify({email: email, password: pass})
-  })
-  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
-  .then(function(res){
-    if (!res.ok) throw new Error(res.d.error || 'Login failed');
-    sessionStorage.setItem('dsm-access-token', res.d.accessToken);
-    sessionStorage.setItem('dsm-current-user', res.d.user.email);
-    window.location.href = '/synology-monitor.html';
-  })
-  .catch(function(e){ msg(e.message); btn.disabled=false; btn.textContent='Sign in'; });
-}
-
-// Register
-document.getElementById('reg-btn').onclick = doRegister;
-
-function doRegister() {
-  var email = document.getElementById('reg-email').value.trim();
-  var name  = document.getElementById('reg-name').value.trim();
-  var pass  = document.getElementById('reg-pass').value;
-  var gdpr  = document.getElementById('gdpr').checked;
-  var btn   = document.getElementById('reg-btn');
-  if (!email || !pass) { msg('Email and password are required.'); return; }
-  if (!gdpr) { msg('You must accept the Privacy Policy.'); return; }
-  if (pass.length < 8) { msg('Password must be at least 8 characters.'); return; }
-  btn.disabled = true; btn.textContent = 'Creating account...'; clrMsg();
-  fetch(API + '/auth/signup', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    credentials: 'include',
-    body: JSON.stringify({email:email, password:pass, displayName:name, gdprConsent:true})
-  })
-  .then(function(r){ return r.json().then(function(d){ return {ok:r.ok,d:d}; }); })
-  .then(function(res){
-    if (!res.ok) throw new Error(res.d.error || 'Registration failed');
-    sessionStorage.setItem('dsm-access-token', res.d.accessToken);
-    sessionStorage.setItem('dsm-current-user', res.d.user.email);
-    window.location.href = '/synology-monitor.html';
-  })
-  .catch(function(e){ msg(e.message); btn.disabled=false; btn.textContent='Create account'; });
-}
-
-// Reset
-document.getElementById('rst-btn').onclick = function(){
-  var email = document.getElementById('rst-email').value.trim();
-  if (!email) { msg('Please enter your email address.'); return; }
-  msg('If an account exists, a reset link has been sent.', 'ok');
+document.getElementById('rst-btn').onclick=function(){
+  var email=document.getElementById('rst-email').value.trim();
+  if(!email){msg('Please enter your email address.');return;}
+  msg('If an account exists, a reset link has been sent.','ok');
 };
 </script>
 </body>
