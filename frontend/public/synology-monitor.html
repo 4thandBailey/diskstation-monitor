@@ -2807,6 +2807,17 @@ const SERIAL_DB = {
   'Q1R': { model:'RS3621xs+',type:'rack',cpu:'Intel Xeon D-1531 (6-core)', ram:'16 GB (48 GB max)', bays:'36', net:'2× 10GbE + 4× 1GbE' },
   // ── FlashStation / UC ──
   'I5J': { model:'FS3600',  type:'flash', cpu:'Intel Xeon D-1567 (12-core)', ram:'16 GB (256 GB max)', bays:'24', net:'4× 25GbE' },
+  '253': { model:'DS923+',    type:'nas', cpu:'AMD Ryzen R1600 (4-core)', ram:'4 GB (32 GB max)', bays:'4', net:'2x 1GbE' },
+  '25A': { model:'DS1522+',   type:'nas', cpu:'AMD Ryzen R1600 (4-core)', ram:'8 GB (32 GB max)', bays:'5', net:'4x 1GbE' },
+  '25B': { model:'DS1621+',   type:'nas', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'6', net:'4x 1GbE' },
+  '25C': { model:'DS1821+',   type:'nas', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'8', net:'4x 1GbE' },
+  '25D': { model:'DS223+',    type:'nas', cpu:'Realtek RTD1619B (4-core)', ram:'2 GB', bays:'2', net:'2x 1GbE' },
+  '25E': { model:'DS423+',    type:'nas', cpu:'Intel Celeron J4125 (4-core)', ram:'2 GB', bays:'4', net:'2x 1GbE' },
+  '25F': { model:'DS723+',    type:'nas', cpu:'AMD Ryzen R1600 (2-core)', ram:'2 GB (32 GB max)', bays:'2', net:'2x 1GbE' },
+  '25G': { model:'DS1823xs+', type:'nas', cpu:'Intel Xeon D-1733NT (6-core)', ram:'8 GB (64 GB max)', bays:'8', net:'4x 1GbE + 2x 10GbE' },
+  '25H': { model:'RS2423+',   type:'rack', cpu:'AMD Ryzen V1500B (4-core)', ram:'8 GB (32 GB max)', bays:'24', net:'4x 1GbE' },
+  '25J': { model:'RS1221RP+', type:'rack', cpu:'AMD Ryzen V1500B (4-core)', ram:'4 GB (32 GB max)', bays:'12', net:'4x 1GbE' },
+  '1C5': { model:'DS918+',    type:'nas', cpu:'Intel Celeron J3455 (4-core)', ram:'4 GB (8 GB max)', bays:'4', net:'2x 1GbE' },
   'D6E': { model:'UC3200',  type:'cluster', cpu:'Intel Xeon D-1521 (4-core)', ram:'8 GB (32 GB max)', bays:'12', net:'4× 10GbE' },
 };
 
@@ -2828,242 +2839,7 @@ function lookupBySerial(serial) {
 }
 
 // ─── DATA ───────────────────────────────────────────────
-let DEVICES = [
-  {
-    id: 1, name: 'NAS-PRIMARY', serial: 'B3J4N01234',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'ABCD1234…9012',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.MD5", "FileStation.DirSize", "FileStation.CheckPermission", "FileStation.VirtualFolder", "FileStation.BackgroundTask", "FileStation.Sharing"],
-    apiTokenExpiry: '2026-09-01',
-    scanScope: ["/volume1/data/contracts", "/volume1/data/financial", "/volume1/config", "/volume1/audit-logs"],
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'DS923+', type: 'nas', ip: '192.168.1.10', prevIp: '192.168.1.10',
-    dsm: '7.2-64570', health: 'good', healthPct: 94,
-    uptime: '142d 3h', cpu: 42, ram: 61,
-    lat: 29.7604, lng: -95.3698, address: '1001 Main St, Houston, TX',
-    connections: [
-      { proto:'SMB', user:'jsmith',     host:'192.168.1.55',  share:'/volume1/data',    since:'08:12' },
-      { proto:'SMB', user:'mlee',       host:'192.168.1.62',  share:'/volume1/media',   since:'08:45' },
-      { proto:'SMB', user:'admin',      host:'192.168.1.10',  share:'/volume1/homes',   since:'07:30' },
-      { proto:'NFS', user:'root',       host:'192.168.1.80',  share:'/volume1/backup',  since:'06:00' },
-      { proto:'SMB', user:'kpatel',     host:'192.168.1.71',  share:'/volume1/data',    since:'09:01' },
-      { proto:'WebDAV', user:'jsmith',  host:'192.168.1.55',  share:'/volume1/drive',   since:'09:10' },
-      { proto:'SMB', user:'tchen',      host:'192.168.1.88',  share:'/volume1/shared',  since:'08:58' },
-      { proto:'FTP',  user:'ftpuser',   host:'203.0.113.44',  share:'/volume1/public',  since:'09:15' },
-      { proto:'SMB', user:'lwilson',    host:'192.168.1.91',  share:'/volume1/data',    since:'08:20' },
-      { proto:'SFTP', user:'devops',    host:'10.0.0.20',     share:'/volume1/deploy',  since:'08:33' },
-      { proto:'SMB', user:'rgarcia',    host:'192.168.1.66',  share:'/volume1/media',   since:'09:05' },
-      { proto:'NFS', user:'svc-backup', host:'10.0.0.5',      share:'/volume2/archive', since:'01:00' },
-    ],
-    dsmUpdate: '7.2.1-69057', appUpdates: ['Synology Photos 1.7', 'Drive 3.5'],
-    status: 'online', powerHistory: [1,1,1,1,1,1,1,1,1,1,1,1],
-    location: 'Server Room A',
-    integrity: 'clean', integrityPct: 100, lastMd5: '06:00',
-    volumeUsedGb: 3800, volumeTotalGb: 8000, growthGbDay: 4.2, daysLeft: 1000,
-  },
-  {
-    id: 2, name: 'NAS-BACKUP', serial: 'C5K2M05678',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'EFGH5678…3456',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.MD5", "FileStation.DirSize", "FileStation.CheckPermission", "FileStation.BackgroundTask", "FileStation.Sharing"],
-    apiTokenExpiry: '2026-09-01',
-    scanScope: ["/volume1/snapshots", "/volume1/archive"],
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'DS1621+', type: 'nas', ip: '10.0.0.5', prevIp: '10.0.0.5',
-    dsm: '7.2.1-69057', health: 'good', healthPct: 99,
-    uptime: '67d 11h', cpu: 18, ram: 38,
-    lat: 29.7620, lng: -95.3715, address: '1001 Main St, Houston, TX (Backup Bay)',
-    connections: [
-      { proto:'NFS',  user:'svc-backup', host:'192.168.1.10', share:'/volume1/nas-primary', since:'01:00' },
-      { proto:'rsync',user:'svc-sync',   host:'192.168.1.45', share:'/volume1/nas-media',   since:'02:00' },
-      { proto:'SMB',  user:'admin',      host:'10.0.0.1',     share:'/volume1/admin',       since:'07:55' },
-      { proto:'SFTP', user:'devops',     host:'10.0.0.20',    share:'/volume1/snapshots',   since:'08:00' },
-    ],
-    dsmUpdate: null, appUpdates: [],
-    status: 'online', powerHistory: [1,1,1,1,1,1,1,1,1,1,1,1],
-    location: 'Server Room A',
-    integrity: 'clean', integrityPct: 100, lastMd5: '06:00',
-    volumeUsedGb: 6200, volumeTotalGb: 24000, growthGbDay: 8.7, daysLeft: 2046,
-  },
-  {
-    id: 3, name: 'RACK-01', serial: 'F7H3P09012',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'IJKL9012…7890',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.DirSize", "FileStation.VirtualFolder", "FileStation.BackgroundTask"],
-    apiTokenExpiry: '2026-08-15',
-    scanScope: null,
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'RS820RP+', type: 'rack', ip: '10.1.10.20', prevIp: '10.1.10.19',
-    dsm: '7.1-42218', health: 'warning', healthPct: 71,
-    uptime: '3d 2h', cpu: 67, ram: 74,
-    lat: 29.9902, lng: -95.3368, address: '20 Greens Rd, Houston, TX — Data Center',
-    connections: [
-      { proto:'iSCSI', user:'vmhost-01', host:'10.1.10.5',  share:'/volume1/vmstore', since:'06:10' },
-      { proto:'iSCSI', user:'vmhost-02', host:'10.1.10.6',  share:'/volume1/vmstore', since:'06:10' },
-    ],
-    dsmUpdate: '7.2.1-69057', appUpdates: ['Active Backup 2.7'],
-    status: 'online', powerHistory: [1,1,1,0,1,1,1,1,1,1,1,1],
-    location: 'Data Center',
-    integrity: 'warn', integrityPct: 94, lastMd5: '06:02',
-    volumeUsedGb: 9100, volumeTotalGb: 10000, growthGbDay: 12.1, daysLeft: 74,
-  },
-  {
-    id: 4, name: 'NAS-MEDIA', serial: 'A1D8Q02345',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'MNOP3456…1234',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.MD5", "FileStation.DirSize", "FileStation.CheckPermission", "FileStation.BackgroundTask", "FileStation.Sharing"],
-    apiTokenExpiry: '2026-09-10',
-    scanScope: ["/volume1/photos", "/volume1/documents"],
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'DS220+', type: 'nas', ip: '192.168.1.45', prevIp: '192.168.1.45',
-    dsm: '7.2-64570', health: 'good', healthPct: 88,
-    uptime: '31d 14h', cpu: 28, ram: 52,
-    lat: 29.7499, lng: -95.3663, address: '500 Crawford St, Houston, TX',
-    connections: [
-      { proto:'SMB',    user:'jsmith',   host:'192.168.1.55', share:'/volume1/movies',  since:'08:50' },
-      { proto:'SMB',    user:'mlee',     host:'192.168.1.62', share:'/volume1/music',   since:'09:00' },
-      { proto:'HTTP',   user:'plex',     host:'0.0.0.0',      share:'/volume1/media',   since:'00:01' },
-      { proto:'WebDAV', user:'kpatel',   host:'192.168.1.71', share:'/volume1/photos',  since:'08:40' },
-      { proto:'SMB',    user:'tchen',    host:'192.168.1.88', share:'/volume1/movies',  since:'09:10' },
-      { proto:'rsync',  user:'svc-sync', host:'10.0.0.5',     share:'/volume1/backup',  since:'03:00' },
-      { proto:'SMB',    user:'lwilson',  host:'192.168.1.91', share:'/volume1/tv',      since:'09:12' },
-    ],
-    dsmUpdate: '7.2.1-69057', appUpdates: ['Plex Media Server 1.40', 'Synology Drive 3.5'],
-    status: 'online', powerHistory: [1,1,1,1,1,1,0,0,1,1,1,1],
-    location: 'Office',
-    integrity: 'clean', integrityPct: 100, lastMd5: '06:05',
-    volumeUsedGb: 1700, volumeTotalGb: 2000, growthGbDay: 2.8, daysLeft: 107,
-  },
-  {
-    id: 5, name: 'NAS-OFFICE', serial: 'E9L1R07890',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'QRST7890…5678',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.MD5", "FileStation.DirSize", "FileStation.CheckPermission", "FileStation.BackgroundTask", "FileStation.Sharing"],
-    apiTokenExpiry: '2026-09-10',
-    scanScope: ["/volume1/shared", "/volume1/projects"],
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'DS720+', type: 'nas', ip: '192.168.10.5', prevIp: '192.168.10.5',
-    dsm: '7.2.1-69057', health: 'good', healthPct: 97,
-    uptime: '88d 6h', cpu: 11, ram: 29,
-    lat: 29.7358, lng: -95.4171, address: '5959 Westheimer Rd, Houston, TX',
-    connections: [
-      { proto:'SMB', user:'jsmith',   host:'192.168.10.12', share:'/volume1/shared',   since:'08:30' },
-      { proto:'SMB', user:'mlee',     host:'192.168.10.14', share:'/volume1/projects', since:'08:45' },
-      { proto:'SMB', user:'kpatel',   host:'192.168.10.18', share:'/volume1/shared',   since:'09:00' },
-      { proto:'SMB', user:'tchen',    host:'192.168.10.22', share:'/volume1/projects', since:'08:55' },
-      { proto:'SMB', user:'lwilson',  host:'192.168.10.30', share:'/volume1/shared',   since:'09:08' },
-      { proto:'SMB', user:'rgarcia',  host:'192.168.10.33', share:'/volume1/archive',  since:'08:20' },
-      { proto:'NFS', user:'svc-print',host:'192.168.10.50', share:'/volume1/print',    since:'07:00' },
-      { proto:'WebDAV',user:'jsmith', host:'192.168.10.12', share:'/volume1/drive',    since:'08:35' },
-      { proto:'SMB', user:'bwong',    host:'192.168.10.41', share:'/volume1/shared',   since:'09:11' },
-    ],
-    dsmUpdate: null, appUpdates: [],
-    status: 'online', powerHistory: [1,1,1,1,1,1,1,1,1,1,1,1],
-    location: 'Office',
-    integrity: 'clean', integrityPct: 100, lastMd5: '06:08',
-    volumeUsedGb: 890, volumeTotalGb: 4000, growthGbDay: 1.1, daysLeft: 2827,
-  },
-  {
-    id: 6, name: 'NAS-REMOTE', serial: 'G2N5S03456',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'UVWX1234…9012',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.MD5", "FileStation.DirSize", "FileStation.CheckPermission", "FileStation.BackgroundTask", "FileStation.Sharing"],
-    apiTokenExpiry: '2026-09-15',
-    scanScope: ["/volume1/remote"],
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'DS420+', type: 'nas', ip: '172.16.0.10', prevIp: '172.16.0.10',
-    dsm: '7.2.1-69057', health: 'good', healthPct: 95,
-    uptime: '14d 9h', cpu: 22, ram: 44,
-    lat: 29.5519, lng: -95.1430, address: '7002 Riverbrook Dr, Sugar Land, TX',
-    connections: [
-      { proto:'VPN/SMB', user:'jsmith',  host:'203.0.113.10', share:'/volume1/remote', since:'08:00' },
-      { proto:'SFTP',    user:'devops',  host:'203.0.113.20', share:'/volume1/deploy', since:'07:45' },
-      { proto:'VPN/SMB', user:'kpatel',  host:'203.0.113.30', share:'/volume1/remote', since:'08:30' },
-    ],
-    dsmUpdate: null, appUpdates: ['Surveillance Station 9.2'],
-    status: 'online', powerHistory: [1,1,1,1,1,1,1,1,1,1,1,1],
-    location: 'Remote Office',
-    integrity: 'clean', integrityPct: 100, lastMd5: '06:10',
-    volumeUsedGb: 420, volumeTotalGb: 2000, growthGbDay: 0.5, daysLeft: 3160,
-  },
-  {
-    id: 7, name: 'RACK-02', serial: 'H4P6T04567',
-    port: 5001,
-    apiTokenSet: false,
-    apiTokenDisplay: null,
-    apiTokenScope: [],
-    apiTokenExpiry: null,
-    scanScope: null,
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'RS2421+', type: 'rack', ip: '10.1.10.30', prevIp: '10.1.10.30',
-    dsm: '7.2.1-69057', health: 'critical', healthPct: 12,
-    uptime: '0d 0h', cpu: 0, ram: 0,
-    lat: 29.9910, lng: -95.3380, address: '20 Greens Rd, Houston, TX — Rack Hall B',
-    connections: [],
-    dsmUpdate: null, appUpdates: [],
-    status: 'offline', powerHistory: [1,1,1,1,1,1,1,0,0,0,0,0],
-    location: 'Data Center',
-    integrity: 'crit', integrityPct: 0, lastMd5: 'N/A',
-    volumeUsedGb: 0, volumeTotalGb: 48000, growthGbDay: 0, daysLeft: 0,
-  },
-  {
-    id: 8, name: 'NAS-DEV', serial: 'J6Q7U05678',
-    port: 5001,
-    apiTokenSet: true,
-    apiTokenDisplay: 'YZAB5678…3456',
-    apiTokenScope: ["FileStation.Info", "FileStation.List", "FileStation.MD5", "FileStation.DirSize", "FileStation.CheckPermission", "FileStation.BackgroundTask"],
-    apiTokenExpiry: '2026-09-20',
-    scanScope: ["/volume1/builds", "/volume1/deploy"],
-    dirSizeHistory: [],
-    checkPermResults: [],
-    virtualFolders: [],
-    model: 'DS218+', type: 'nas', ip: '192.168.50.20', prevIp: '192.168.50.20',
-    dsm: '7.2-64570', health: 'good', healthPct: 82,
-    uptime: '55d 19h', cpu: 35, ram: 67,
-    lat: 29.7215, lng: -95.3975, address: '8000 S Main St, Houston, TX — Lab',
-    connections: [
-      { proto:'SMB',  user:'devops',  host:'192.168.50.5',  share:'/volume1/builds',  since:'08:00' },
-      { proto:'SFTP', user:'ci-bot',  host:'10.0.0.20',     share:'/volume1/deploy',  since:'07:00' },
-    ],
-    dsmUpdate: '7.2.1-69057', appUpdates: [],
-    status: 'online', powerHistory: [1,1,1,1,1,1,1,1,1,1,1,1],
-    location: 'Lab',
-    integrity: 'clean', integrityPct: 100, lastMd5: '06:12',
-    volumeUsedGb: 340, volumeTotalGb: 1000, growthGbDay: 3.4, daysLeft: 194,
-  }
-];
-
-let nextId = 9;
-
-const ALERTS = [
-  { id:1, type:'crit', title:'RACK-02 — Power Loss Detected', desc:'RS2421+ (10.1.10.30) has been unreachable for 47 minutes. Last seen 09:01:18. Power loss suspected.', time:'09:01 AM', icon:'⚡' },
-  { id:2, type:'warn', title:'RACK-01 — IP Address Changed', desc:'RS820RP+ IP changed from 10.1.10.19 → 10.1.10.20 at 09:37:12. DHCP lease renewal detected.', time:'09:37 AM', icon:'🌐' },
-  { id:3, type:'info', title:'3 Devices — DSM 7.2.1 Update Available', desc:'NAS-PRIMARY, NAS-MEDIA, NAS-DEV, and RACK-01 have a pending DSM update to 7.2.1-69057.', time:'08:00 AM', icon:'↓' }
-];
-
-let currentFilter = 'all';
-let currentSearch = '';
-let alertList = [...ALERTS];
+let DEVICES = [];
 
 // ─── RENDER ───────────────────────────────────────────────
 function healthClass(d) {
@@ -3587,12 +3363,10 @@ function lookupSerial() {
     return;
   }
 
-  const result = lookupBySerial(serial);
+  let result = lookupBySerial(serial);
   if (!result) {
-    document.getElementById('serial-input').classList.add('error');
-    document.getElementById('serial-error').textContent = 'Serial number not recognized. Check the label or try a valid prefix (B3J, C5K, F7H…)';
-    document.getElementById('serial-error').classList.add('show');
-    return;
+    // Accept unknown serials with a generic profile
+    result = { model:'Synology NAS', type:'nas', cpu:'--', ram:'--', bays:'--', net:'--', serial:serial, autoName:'NAS-NEW' };
   }
 
   lookupResult = result;
@@ -5587,19 +5361,18 @@ function apiCall(method, path, body) {
 function loadRealDevices() {
   if (!sessionStorage.getItem('dsm-access-token')) return;
   apiCall('GET', '/api/devices').then(function(data) {
-    if (!data || !data.devices || !data.devices.length) return;
-    window.devices = data.devices.map(function(d) {
+    if (!data || !data.devices) return;
+    DEVICES = data.devices.map(function(d) {
       var p = d.last_poll || {};
-      return {
-        id:d.id, name:d.name, model:d.model||'Unknown', serial:d.serial,
-        ip:d.ip_address+':'+d.port,
+      return { id:d.id, name:d.name, model:d.model||'Synology NAS', serial:d.serial,
+        ip:d.ip_address, port:d.port, type:'nas',
         status:d.status==='online'?'online':d.status==='offline'?'offline':'warning',
-        dsm:d.dsm_version||'--', lat:d.latitude, lng:d.longitude,
-        location:d.location_name||'', cpu:Math.round(p.cpu_percent||0),
-        ram:Math.round(p.ram_percent||0), apiTokenSet:true,
-        apiTokenDisplay:'Token registered', apiTokenScope:[], uptime:'--',
-        connections:{smb:0,ftp:0,total:p.connections?p.connections.total||0:0}, volumes:[]
-      };
+        health:d.status==='online'?94:0, dsm:d.dsm_version||'--',
+        lat:d.latitude, lng:d.longitude, location:d.location_name||'',
+        cpu:Math.round(p.cpu_percent||0), ram:Math.round(p.ram_percent||0),
+        apiTokenSet:true, apiTokenDisplay:'Scoped token active', apiTokenScope:[],
+        uptime:'--', connections:{smb:0,nfs:0,ftp:0,sftp:0,total:p.connections?p.connections.total||0:0},
+        volumes:[] };
     });
     renderDevices();
     syncMobileNavBadge();
