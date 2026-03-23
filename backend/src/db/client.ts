@@ -1,19 +1,19 @@
 import { Pool } from 'pg';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is required');
-}
+// Defer connection — don't throw at module load time so the server can start
+// and report a degraded /health status until DATABASE_URL is provisioned.
+const connectionString = process.env.DATABASE_URL;
 
 export const db = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: connectionString || 'postgresql://localhost/placeholder',
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 3000,
 });
 
 db.on('error', (err) => {
-  console.error('[db] Unexpected pool error:', err.message);
+  console.error('[db] Pool error:', err.message);
 });
 
 export async function dbQuery<T = Record<string, unknown>>(
