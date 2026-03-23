@@ -8,8 +8,18 @@
   VITE_API_URL = "https://diskstation-monitor-production.up.railway.app"
 
 [[redirects]]
+  from   = "/"
+  to     = "/dsm-auth.html"
+  status = 200
+
+[[redirects]]
+  from   = "/dashboard"
+  to     = "/synology-monitor.html"
+  status = 200
+
+[[redirects]]
   from   = "/*"
-  to     = "/index.html"
+  to     = "/dsm-auth.html"
   status = 200
 
 [[headers]]
