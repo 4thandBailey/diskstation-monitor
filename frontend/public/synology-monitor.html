@@ -3327,7 +3327,8 @@ function resetAddModal() {
   document.getElementById('lookup-btn').textContent = 'Look Up Serial →';
   document.getElementById('name-input').value = '';
   document.getElementById('ip-input').value = '';
-  document.getElementById('token-input').value = '';
+  const pwEl = document.getElementById('dsm-password'); if (pwEl) pwEl.value = '';
+  const unEl = document.getElementById('dsm-username'); if (unEl) unEl.value = 'dsm-monitor';
   document.getElementById('scope-input').value = '';
   document.getElementById('loc-input').value = '';
   const sugg = document.getElementById('geo-suggestions');
@@ -3407,12 +3408,10 @@ function addDevice() {
   const scanScope  = scopeRaw.split('\n').map(l => l.trim()).filter(Boolean);
   const loc        = document.getElementById('loc-input').value.trim() || 'Unknown';
 
-  // Validate token — required for scoped API model (least privilege)
-  if (!apiToken) {
-    const errEl = document.getElementById('token-error');
-    if (errEl) errEl.classList.add('show');
-    const inp = document.getElementById('token-input');
-    if (inp) { inp.classList.add('error'); inp.focus(); }
+  // Validate credentials
+  if (!apiToken || apiToken === ':') {
+    const pwEl = document.getElementById('dsm-password');
+    if (pwEl) { pwEl.classList.add('error'); pwEl.focus(); }
     return;
   }
 
