@@ -2623,7 +2623,7 @@ dsm-poller start \
         <label class="form-label">DSM Password</label>
         <input class="form-input" id="dsm-password" type="password" placeholder="Password for dsm-monitor account">
         <div style="margin-top:8px;padding:8px 10px;background:var(--blue-dim);border-radius:6px;font-size:11px;color:var(--text2);line-height:1.5">
-          DSM 7.2+ uses username/password. Enter the credentials for the <code style="font-family:var(--mono)">dsm-monitor</code> account you created in DSM Control Panel.
+          DSM 7.2+ authentication. Enter the <code style="font-family:var(--mono)">dsm-monitor</code> credentials from DSM Control Panel.
         </div>
       </div>
         <div style="font-size:11px;color:var(--text3);margin-top:5px;line-height:1.5">
@@ -2805,9 +2805,9 @@ const SERIAL_DB = {
   'Q1R': { model:'RS3621xs+',type:'rack',cpu:'Intel Xeon D-1531 (6-core)', ram:'16 GB (48 GB max)', bays:'36', net:'2× 10GbE + 4× 1GbE' },
   // ── FlashStation / UC ──
   'I5J': { model:'FS3600',  type:'flash', cpu:'Intel Xeon D-1567 (12-core)', ram:'16 GB (256 GB max)', bays:'24', net:'4× 25GbE' },
-  '253': { model:'DS224+',    type:'nas', cpu:'AMD Ryzen R1600 dual-core', ram:'2 GB (6 GB max)', bays:'2', net:'2x 1GbE' },
-  '251': { model:'DS223+',    type:'nas', cpu:'Realtek RTD1619B (4-core)', ram:'2 GB (6 GB max)', bays:'2', net:'2x 1GbE' },
-  '213': { model:'DS418',     type:'nas', cpu:'Realtek RTD1293 (4-core)', ram:'2 GB', bays:'4', net:'1x 1GbE' },
+  '253': { model:'DS224+', type:'nas', cpu:'AMD Ryzen R1600 dual-core', ram:'2 GB (6 GB max)', bays:'2', net:'2x 1GbE' },
+  '251': { model:'DS223+', type:'nas', cpu:'Realtek RTD1619B (4-core)', ram:'2 GB (6 GB max)', bays:'2', net:'2x 1GbE' },
+  '213': { model:'DS418',  type:'nas', cpu:'Realtek RTD1293 (4-core)', ram:'2 GB', bays:'4', net:'1x 1GbE' },
   'D6E': { model:'UC3200',  type:'cluster', cpu:'Intel Xeon D-1521 (4-core)', ram:'8 GB (32 GB max)', bays:'12', net:'4× 10GbE' },
 };
 
