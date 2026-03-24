@@ -14,6 +14,7 @@ const authLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false }, // Railway sets this header — disable strict validation
 });
 
 // ── POST /auth/signup ─────────────────────────────────────────────────────────
